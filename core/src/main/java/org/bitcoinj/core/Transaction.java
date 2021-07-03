@@ -776,20 +776,8 @@ public class Transaction extends ChildMessage {
         if (purpose != null)
             s.append(indent).append("purpose: ").append(purpose).append('\n');
         if (isCoinBase()) {
-            String script;
-            String script2;
-            try {
-                script = inputs.get(0).getScriptSig().toString();
-                script2 = outputs.get(0).getScriptPubKey().toString();
-            } catch (ScriptException e) {
-                script = "???";
-                script2 = "???";
-            }
-            s.append(indent).append("   == COINBASE TXN (scriptSig ").append(script).append(")  (scriptPubKey ").append(script2)
-                    .append(")\n");
-            return s.toString();
-        }
-        if (!inputs.isEmpty()) {
+            s.append(indent).append("coinbase\n");
+        } else if (!inputs.isEmpty()) {
             int i = 0;
             for (TransactionInput in : inputs) {
                 s.append(indent).append("   ");
@@ -861,8 +849,7 @@ public class Transaction extends ChildMessage {
                                 .append(spentBy.getIndex());
                     }
                 }
-                if (scriptType != null || !out.isAvailableForSpending())
-                    s.append('\n');
+                s.append('\n');
             } catch (Exception e) {
                 s.append("[exception: ").append(e.getMessage()).append("]\n");
             }
@@ -947,8 +934,7 @@ public class Transaction extends ChildMessage {
             input.setScriptSig(ScriptBuilder.createInputScript(signature, sigKey));
             input.setWitness(null);
         } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
-            Script scriptCode = new ScriptBuilder()
-                    .data(ScriptBuilder.createOutputScript(LegacyAddress.fromKey(params, sigKey)).getProgram()).build();
+            Script scriptCode = ScriptBuilder.createP2PKHOutputScript(sigKey);
             TransactionSignature signature = calculateWitnessSignature(inputIndex, sigKey, scriptCode, input.getValue(),
                     sigHash, anyoneCanPay);
             input.setScriptSig(ScriptBuilder.createEmpty());
@@ -1381,6 +1367,7 @@ public class Transaction extends ChildMessage {
             bos.write(hashSequence);
             bos.write(inputs.get(inputIndex).getOutpoint().getHash().getReversedBytes());
             uint32ToByteStreamLE(inputs.get(inputIndex).getOutpoint().getIndex(), bos);
+            bos.write(new VarInt(scriptCode.length).encode());
             bos.write(scriptCode);
             uint64ToByteStreamLE(BigInteger.valueOf(prevValue.getValue()), bos);
             uint32ToByteStreamLE(inputs.get(inputIndex).getSequenceNumber(), bos);

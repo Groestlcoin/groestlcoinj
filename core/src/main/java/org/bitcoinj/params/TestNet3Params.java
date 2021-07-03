@@ -20,8 +20,17 @@ package org.bitcoinj.params;
 import org.bitcoinj.core.*;
 
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.Date;
 
+
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.VerificationException;
+import org.bitcoinj.net.discovery.HttpDiscovery;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 

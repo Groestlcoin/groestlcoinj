@@ -16,6 +16,7 @@
 
 package org.bitcoinj.core;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.net.InetAddresses;
 
@@ -25,6 +26,8 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -41,7 +44,7 @@ import java.util.Locale;
 public class VersionMessage extends Message {
 
     /** The version of this library release, as a string. */
-    public static final String BITCOINJ_VERSION = "0.15.5.1";
+    public static final String BITCOINJ_VERSION = "0.15.10";
     /** The value that is prepended to the subVer field of this application. */
     public static final String LIBRARY_SUBVER = "/groestlcoinj:" + BITCOINJ_VERSION + "/";
 
@@ -105,7 +108,7 @@ public class VersionMessage extends Message {
         super(params);
         clientVersion = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT);
         localServices = 0;
-        time = System.currentTimeMillis() / 1000;
+        time = Utils.currentTimeSeconds();
         // Note that the Bitcoin Core doesn't do anything with these, and finding out your own external IP address
         // is kind of tricky anyway, so we just put nonsense here for now.
         InetAddress localhost = InetAddresses.forString("127.0.0.1");
@@ -205,17 +208,19 @@ public class VersionMessage extends Message {
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("\n");
-        stringBuilder.append("client version: ").append(clientVersion).append("\n");
-        stringBuilder.append("local services: ").append(localServices).append("\n");
-        stringBuilder.append("time:           ").append(time).append("\n");
-        stringBuilder.append("receiving addr: ").append(receivingAddr).append("\n");
-        stringBuilder.append("from addr:      ").append(fromAddr).append("\n");
-        stringBuilder.append("sub version:    ").append(subVer).append("\n");
-        stringBuilder.append("best height:    ").append(bestHeight).append("\n");
-        stringBuilder.append("delay tx relay: ").append(!relayTxesBeforeFilter).append("\n");
-        return stringBuilder.toString();
+        StringBuilder builder = new StringBuilder("\n");
+        builder.append("client version: ").append(clientVersion).append("\n");
+        builder.append("local services: ").append(localServices);
+        if (localServices != 0)
+            builder.append(" (").append(toStringServices(localServices)).append(")");
+        builder.append("\n");
+        builder.append("time:           ").append(time).append("\n");
+        builder.append("receiving addr: ").append(receivingAddr).append("\n");
+        builder.append("from addr:      ").append(fromAddr).append("\n");
+        builder.append("sub version:    ").append(subVer).append("\n");
+        builder.append("best height:    ").append(bestHeight).append("\n");
+        builder.append("delay tx relay: ").append(!relayTxesBeforeFilter).append("\n");
+        return builder.toString();
     }
 
     public VersionMessage duplicate() {
@@ -308,5 +313,32 @@ public class VersionMessage extends Message {
     /** Returns true if the peer has at least the last two days worth of blockchain (BIP159). */
     public boolean hasLimitedBlockChain() {
         return hasBlockChain() || (localServices & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED;
+    }
+
+    public static String toStringServices(long services) {
+        List<String> strings = new LinkedList<>();
+        if ((services & NODE_NETWORK) == NODE_NETWORK) {
+            strings.add("NETWORK");
+            services &= ~NODE_NETWORK;
+        }
+        if ((services & NODE_GETUTXOS) == NODE_GETUTXOS) {
+            strings.add("GETUTXOS");
+            services &= ~NODE_GETUTXOS;
+        }
+        if ((services & NODE_BLOOM) == NODE_BLOOM) {
+            strings.add("BLOOM");
+            services &= ~NODE_BLOOM;
+        }
+        if ((services & NODE_WITNESS) == NODE_WITNESS) {
+            strings.add("WITNESS");
+            services &= ~NODE_WITNESS;
+        }
+        if ((services & NODE_NETWORK_LIMITED) == NODE_NETWORK_LIMITED) {
+            strings.add("NETWORK_LIMITED");
+            services &= ~NODE_NETWORK_LIMITED;
+        }
+        if (services != 0)
+            strings.add("remaining: " + Long.toBinaryString(services));
+        return Joiner.on(", ").join(strings);
     }
 }
