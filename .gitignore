@@ -17,5 +17,8 @@ out/
 *.wallet
 obj/
 libs/
+checkpoints-testnet
+checkpoints-testnet.txt
 checkpoints
 checkpoints.txt
+local.properties
