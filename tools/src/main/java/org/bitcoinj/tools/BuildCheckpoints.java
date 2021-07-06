@@ -50,6 +50,7 @@ import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.bitcoinj.tools.NetworkEnum.TEST;
 
 /**
  * Downloads and verifies a full chain from your local peer, emitting checkpoints at each difficulty transition period
@@ -116,7 +117,11 @@ public class BuildCheckpoints {
         } else if (networkHasDnsSeeds) {
             // for PROD and TEST use a peer group discovered with dns
             peerGroup.setUserAgent("PeerMonitor", "1.0");
-            peerGroup.setMaxConnections(20);
+            if (netFlag.value(options) == TEST) {
+                peerGroup.setMaxConnections(6);
+            } else {
+                peerGroup.setMaxConnections(20);
+            }
             peerGroup.addPeerDiscovery(new DnsDiscovery(params));
             peerGroup.start();
 
