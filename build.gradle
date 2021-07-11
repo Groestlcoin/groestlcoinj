@@ -13,5 +13,5 @@ allprojects {
         mavenCentral()
     }
 
-    group = 'org.groestlcoinj'
+    group = 'com.github.groestlcoin'
 }
