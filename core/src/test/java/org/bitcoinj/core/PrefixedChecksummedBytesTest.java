@@ -68,7 +68,7 @@ public class PrefixedChecksummedBytesTest {
         PrefixedChecksummedBytes a = new PrefixedChecksummedBytesToTest(params, HEX.decode("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"));
         assertEquals("n4eA2nbYqErp7H6jebchxAN59DmNpksexv", a.toString());
 
-        PrefixedChecksummedBytes b = new PrefixedChecksummedBytesToTest(MAINNET, HEX.decode("4a22c3c4cbb31e4d03b15550636762bda0baf85a"));
+        PrefixedChecksummedBytes b = new PrefixedChecksummedBytesToTest(params, HEX.decode("4a22c3c4cbb31e4d03b15550636762bda0baf85a"));
         assertEquals("Fbvi6bnjhAjghrwk76S8auXu3qFkj4iMrf", b.toString());
     }
 
