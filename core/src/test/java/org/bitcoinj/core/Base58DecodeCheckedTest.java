@@ -43,8 +43,8 @@ public class Base58DecodeCheckedTest {
 
     @DataPoints
     public static String[] parameters = new String[]{
-            "4stwEBjT6FYyVV",
-            "93VYUMzRG9DdbRP72uQXjaWibbQwygnvaCu9DumcqDjGybD864T",
+            "4stwEBjT7p64Ty",
+            "93VYUMzRG9DdbRP72uQXjaWibbQwygnvaCu9DumcqDjGyf6wZfb",
             "J0F12TrwUP45BMd",
             "4s"
     };
