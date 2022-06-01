@@ -27,6 +27,7 @@ import java.util.Date;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Utils;
 import org.bitcoinj.core.VerificationException;
@@ -44,39 +45,24 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
     public static final int TESTNET_MAJORITY_WINDOW = 100;
     public static final int TESTNET_MAJORITY_REJECT_BLOCK_OUTDATED = 75;
     public static final int TESTNET_MAJORITY_ENFORCE_BLOCK_UPGRADE = 51;
+    private static final long GENESIS_TIME = 1440000002L;
+    private static final long GENESIS_NONCE = 6556309;
+    private static final Sha256Hash GENESIS_HASH = Sha256Hash.wrap("000000ffbb50fc9898cdd36ec163e6ba23230164c0052a28876255b7dcf2cd36");
 
     public TestNet3Params() {
         super();
         id = ID_TESTNET;
 
-        // Genesis hash is 000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943
-
-        packetMagic = 0x0b110907;
-        interval = INTERVAL;
         targetTimespan = TARGET_TIMESPAN;
-        maxTarget = Utils.decodeCompactBits(0x1E00FFFF);
+        maxTarget = Utils.decodeCompactBits(Block.STANDARD_MAX_DIFFICULTY_TARGET_TESTNET);
+
         port = 17777;
-        addressHeader = CoinDefinition.testnetAddressHeader;
-        p2shHeader = CoinDefinition.testnetp2shHeader;
+        packetMagic = 0x0b110907;
+        dumpedPrivateKeyHeader = 239;
+        addressHeader = 111;
+        p2shHeader = 196;
         segwitAddressHrp = "tgrs";
-        dumpedPrivateKeyHeader = 128 + CoinDefinition.testnetAddressHeader;
-        genesisBlock.setTime(CoinDefinition.testnetGenesisBlockTime);
-        genesisBlock.setDifficultyTarget(CoinDefinition.testnetGenesisBlockDifficultyTarget);
-        genesisBlock.setNonce(CoinDefinition.testnetGenesisBlockNonce);
-        genesisBlock.setVersion(3);
         spendableCoinbaseDepth = 100;
-
-        subsidyDecreaseBlockCount = CoinDefinition.subsidyDecreaseBlockCount;
-        genesisBlock.setMerkleRoot(Sha256Hash.wrap("3ce968df58f9c8a752306c4b7264afab93149dbc578bd08a42c446caaa6628bb"));
-        String genesisHash = genesisBlock.getHashAsString();
-
-        if(CoinDefinition.supportsTestNet)
-            checkState(genesisHash.equals(CoinDefinition.testnetGenesisHash));
-        alertSigningKey = Utils.HEX.decode(CoinDefinition.TESTNET_SATOSHI_KEY);
-
-        dnsSeeds = CoinDefinition.testnetDnsSeeds;
-
-        addrSeeds = null;
         bip32HeaderP2PKHpub = 0x043587cf; // The 4 byte header that serializes in base58 to "tpub".
         bip32HeaderP2PKHpriv = 0x04358394; // The 4 byte header that serializes in base58 to "tprv"
         bip32HeaderP2WPKHpub = 0x045f1cf6; // The 4 byte header that serializes in base58 to "vpub".
@@ -85,6 +71,11 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
         majorityEnforceBlockUpgrade = TESTNET_MAJORITY_ENFORCE_BLOCK_UPGRADE;
         majorityRejectBlockOutdated = TESTNET_MAJORITY_REJECT_BLOCK_OUTDATED;
         majorityWindow = TESTNET_MAJORITY_WINDOW;
+
+        dnsSeeds = CoinDefinition.testnetDnsSeeds;
+        httpSeeds = null;
+        addrSeeds = null;
+
     }
 
     private static TestNet3Params instance;
@@ -93,6 +84,21 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
             instance = new TestNet3Params();
         }
         return instance;
+    }
+
+    @Override
+    public Block getGenesisBlock() {
+        synchronized (GENESIS_HASH) {
+            if (genesisBlock == null) {
+                genesisBlock = Block.createGenesis(this);
+                genesisBlock.setDifficultyTarget(Block.STANDARD_MAX_DIFFICULTY_TARGET_TESTNET);
+                genesisBlock.setVersion(3);
+                genesisBlock.setTime(GENESIS_TIME);
+                genesisBlock.setNonce(GENESIS_NONCE);
+                checkState(genesisBlock.getHash().equals(GENESIS_HASH), "Invalid genesis hash");
+            }
+        }
+        return genesisBlock;
     }
 
     @Override

@@ -74,7 +74,6 @@ public class TestWithPeerGroup extends TestWithNetworkConnections {
         try {
             super.tearDown();
             blockJobs = false;
-            Utils.finishMockSleep();
             if (peerGroup.isRunning())
                 peerGroup.stopAsync();
         } catch (Exception e) {
@@ -159,6 +158,7 @@ public class TestWithPeerGroup extends TestWithNetworkConnections {
 
     private void stepThroughInit(VersionMessage versionMessage, InboundMessageQueuer writeTarget) throws InterruptedException {
         checkState(writeTarget.nextMessageBlocking() instanceof VersionMessage);
+        checkState(writeTarget.nextMessageBlocking() instanceof SendAddrV2Message);
         checkState(writeTarget.nextMessageBlocking() instanceof VersionAck);
         if (versionMessage.isBloomFilteringSupported()) {
             checkState(writeTarget.nextMessageBlocking() instanceof BloomFilter);

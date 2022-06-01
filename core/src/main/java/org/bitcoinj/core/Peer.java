@@ -16,8 +16,6 @@
 
 package org.bitcoinj.core;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import org.bitcoinj.core.listeners.*;
 import org.bitcoinj.net.AbstractTimeoutHandler;
 import org.bitcoinj.net.NioClient;
@@ -66,8 +64,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class Peer extends PeerSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(Peer.class);
-
-    protected final ReentrantLock lock = Threading.lock("peer");
+    protected final ReentrantLock lock = Threading.lock(Peer.class);
 
     private final NetworkParameters params;
     private final AbstractBlockChain blockChain;
@@ -133,6 +130,7 @@ public class Peer extends PeerSocketHandler {
     // to keep it pinned to the root set if they care about this data.
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private final HashSet<TransactionConfidence> pendingTxDownloads = new HashSet<>();
+    private static final int PENDING_TX_DOWNLOADS_LIMIT = 100;
     // The lowest version number we're willing to accept. Lower than this will result in an immediate disconnect.
     private volatile int vMinProtocolVersion;
     // When an API user explicitly requests a block or transaction from a peer, the InventoryItem is put here
@@ -154,9 +152,12 @@ public class Peer extends PeerSocketHandler {
     private final ReentrantLock lastPingTimesLock = new ReentrantLock();
     @GuardedBy("lastPingTimesLock") private long[] lastPingTimes = null;
     private final CopyOnWriteArrayList<PendingPing> pendingPings;
+    // Disconnect from a peer that is not responding to Pings
+    private static final int PENDING_PINGS_LIMIT = 50;
     private static final int PING_MOVING_AVERAGE_WINDOW = 20;
 
     private volatile VersionMessage vPeerVersionMessage;
+    private volatile Coin vFeeFilter;
 
     // A settable future which completes (with this) when the connection is open
     private final SettableFuture<Peer> connectionOpenFuture = SettableFuture.create();
@@ -175,18 +176,8 @@ public class Peer extends PeerSocketHandler {
                 }
             }, MoreExecutors.directExecutor());
 
-    /**
-     * <p>Construct a peer that reads/writes from the given block chain.</p>
-     *
-     * <p>Note that this does <b>NOT</b> make a connection to the given remoteAddress, it only creates a handler for a
-     * connection. If you want to create a one-off connection, create a Peer and pass it to
-     * {@link NioClientManager#openConnection(SocketAddress, StreamConnection)}
-     * or
-     * {@link NioClient#NioClient(SocketAddress, StreamConnection, int)}.</p>
-     *
-     * <p>The remoteAddress provided should match the remote address of the peer which is being connected to, and is
-     * used to keep track of which peers relayed transactions and offer more descriptive logging.</p>
-     */
+    /** @deprecated Use {@link #Peer(NetworkParameters, VersionMessage, PeerAddress, AbstractBlockChain)}. */
+    @Deprecated
     public Peer(NetworkParameters params, VersionMessage ver, @Nullable AbstractBlockChain chain, PeerAddress remoteAddress) {
         this(params, ver, remoteAddress, chain);
     }
@@ -452,7 +443,7 @@ public class Peer extends PeerSocketHandler {
         }
 
         // No further communication is possible until version handshake is complete.
-        if (!(m instanceof VersionMessage || m instanceof VersionAck
+        if (!(m instanceof VersionMessage || m instanceof VersionAck || m instanceof SendAddrV2Message
                 || (versionHandshakeFuture.isDone() && !versionHandshakeFuture.isCancelled())))
             throw new ProtocolException(
                     "Received " + m.getClass().getSimpleName() + " before version handshake is complete.");
@@ -482,8 +473,6 @@ public class Peer extends PeerSocketHandler {
             processAddressMessage((AddressMessage) m);
         } else if (m instanceof HeadersMessage) {
             processHeaders((HeadersMessage) m);
-        } else if (m instanceof AlertMessage) {
-            processAlert((AlertMessage) m);
         } else if (m instanceof VersionMessage) {
             processVersionMessage((VersionMessage) m);
         } else if (m instanceof VersionAck) {
@@ -494,6 +483,8 @@ public class Peer extends PeerSocketHandler {
             log.error("{} {}: Received {}", this, getPeerVersionMessage().subVer, m);
         } else if (m instanceof SendHeadersMessage) {
             // We ignore this message, because we don't announce new blocks.
+        } else if (m instanceof FeeFilterMessage) {
+            processFeeFilter((FeeFilterMessage) m);
         } else {
             log.warn("{}: Received unhandled message: {}", this, m);
         }
@@ -552,11 +543,12 @@ public class Peer extends PeerSocketHandler {
             close();
             return;
         }
-
         if (peerVersionMessage.bestHeight < 0)
             // In this case, it's a protocol violation.
             throw new ProtocolException("Peer reports invalid best height: " + peerVersionMessage.bestHeight);
         // Now it's our turn ...
+        // Send a sendaddrv2 message, indicating that we prefer to receive addrv2 messages.
+        sendMessage(new SendAddrV2Message(params));
         // Send an ACK message stating we accept the peers protocol version.
         sendMessage(new VersionAck());
         if (log.isDebugEnabled())
@@ -622,22 +614,6 @@ public class Peer extends PeerSocketHandler {
                     break;
                 }
             }
-        }
-    }
-
-    protected void processAlert(AlertMessage m) {
-        try {
-            if (log.isDebugEnabled()) {
-                if (m.isSignatureValid())
-                    log.debug("Received alert from peer {}: {}", this, m.getStatusBar());
-                else
-                    log.debug("Received alert with invalid signature from peer {}: {}", this, m.getStatusBar());
-            }
-        } catch (Throwable t) {
-            // Signature checking can FAIL on Android platforms before Gingerbread apparently due to bugs in their
-            // BigInteger implementations! See https://github.com/bitcoinj/bitcoinj/issues/526 for discussion. As
-            // alerts are just optional and not that useful, we just swallow the error here.
-            log.error("Failed to check signature: bug in platform libraries?", t);
         }
     }
 
@@ -893,7 +869,7 @@ public class Peer extends PeerSocketHandler {
         lock.lock();
         try {
             // Build the request for the missing dependencies.
-            List<ListenableFuture<Transaction>> futures = Lists.newArrayList();
+            List<ListenableFuture<Transaction>> futures = new ArrayList<>();
             GetDataMessage getdata = new GetDataMessage(params);
             if (needToRequest.size() > 1)
                 log.info("{}: Requesting {} transactions for depth {} dep resolution", getAddress(), needToRequest.size(), depth + 1);
@@ -909,7 +885,7 @@ public class Peer extends PeerSocketHandler {
                 public void onSuccess(List<Transaction> transactions) {
                     // Once all transactions either were received, or we know there are no more to come ...
                     // Note that transactions will contain "null" for any positions that weren't successful.
-                    List<ListenableFuture<Object>> childFutures = Lists.newLinkedList();
+                    List<ListenableFuture<Object>> childFutures = new LinkedList<>();
                     for (Transaction tx : transactions) {
                         if (tx == null) continue;
                         log.info("{}: Downloaded dependency of {}: {}", getAddress(), rootTxHash, tx.getTxId());
@@ -1215,6 +1191,11 @@ public class Peer extends PeerSocketHandler {
                 if (log.isDebugEnabled())
                     log.debug("{}: getdata on tx {}", getAddress(), item.hash);
                 getdata.addTransaction(item.hash, vPeerVersionMessage.isWitnessSupported());
+                if (pendingTxDownloads.size() > PENDING_TX_DOWNLOADS_LIMIT) {
+                    log.info("{}: Too many pending transactions, disconnecting", this);
+                    close();
+                    return;
+                }
                 // Register with the garbage collector that we care about the confidence data for a while.
                 pendingTxDownloads.add(conf);
             }
@@ -1429,7 +1410,7 @@ public class Peer extends PeerSocketHandler {
         StoredBlock chainHead = blockChain.getChainHead();
         Sha256Hash chainHeadHash = chainHead.getHeader().getHash();
         // Did we already make this request? If so, don't do it again.
-        if (Objects.equal(lastGetBlocksBegin, chainHeadHash) && Objects.equal(lastGetBlocksEnd, toHash)) {
+        if (Objects.equals(lastGetBlocksBegin, chainHeadHash) && Objects.equals(lastGetBlocksEnd, toHash)) {
             log.info("blockChainDownloadLocked({}): ignoring duplicated request: {}", toHash, chainHeadHash);
             for (Sha256Hash hash : pendingBlockDownloads)
                 log.info("Pending block download: {}", hash);
@@ -1555,6 +1536,10 @@ public class Peer extends PeerSocketHandler {
         final VersionMessage ver = vPeerVersionMessage;
         if (!ver.isPingPongSupported())
             throw new ProtocolException("Peer version is too low for measurable pings: " + ver);
+        if (pendingPings.size() > PENDING_PINGS_LIMIT) {
+            log.info("{}: Too many pending pings, disconnecting", this);
+            close();
+        }
         PendingPing pendingPing = new PendingPing(nonce);
         pendingPings.add(pendingPing);
         sendMessage(new Ping(pendingPing.nonce));
@@ -1611,6 +1596,11 @@ public class Peer extends PeerSocketHandler {
         }
     }
 
+    private void processFeeFilter(FeeFilterMessage m) {
+        log.info("{}: Announced fee filter: {}/kB", this, m.getFeeRate().toFriendlyString());
+        vFeeFilter = m.getFeeRate();
+    }
+
     /**
      * Returns the difference between our best chain height and the peers, which can either be positive if we are
      * behind the peer, or negative if the peer is ahead of us.
@@ -1650,6 +1640,11 @@ public class Peer extends PeerSocketHandler {
     /** Returns version data announced by the remote peer. */
     public VersionMessage getPeerVersionMessage() {
         return vPeerVersionMessage;
+    }
+
+    /** Returns the fee filter announced by the remote peer, interpreted as satoshis per kB. */
+    public Coin getFeeFilter() {
+        return vFeeFilter;
     }
 
     /** Returns version data we announce to our remote peers. */

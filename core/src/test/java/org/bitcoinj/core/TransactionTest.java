@@ -169,111 +169,6 @@ public class TransactionTest {
     }
 
     @Test
-    public void testCLTVPaymentChannelTransactionSpending() {
-        BigInteger time = BigInteger.valueOf(20);
-
-        ECKey from = new ECKey(), to = new ECKey(), incorrect = new ECKey();
-        Script outputScript = ScriptBuilder.createCLTVPaymentChannelOutput(time, from, to);
-
-        Transaction tx = new Transaction(UNITTEST);
-        tx.addInput(new TransactionInput(UNITTEST, tx, new byte[] {}));
-        tx.getInput(0).setSequenceNumber(0);
-        tx.setLockTime(time.subtract(BigInteger.ONE).longValue());
-        TransactionSignature fromSig =
-                tx.calculateSignature(
-                        0,
-                        from,
-                        outputScript,
-                        Transaction.SigHash.SINGLE,
-                        false);
-        TransactionSignature toSig =
-                tx.calculateSignature(
-                        0,
-                        to,
-                        outputScript,
-                        Transaction.SigHash.SINGLE,
-                        false);
-        TransactionSignature incorrectSig =
-                tx.calculateSignature(
-                        0,
-                        incorrect,
-                        outputScript,
-                        Transaction.SigHash.SINGLE,
-                        false);
-        Script scriptSig =
-                ScriptBuilder.createCLTVPaymentChannelInput(fromSig, toSig);
-        Script refundSig =
-                ScriptBuilder.createCLTVPaymentChannelRefund(fromSig);
-        Script invalidScriptSig1 =
-                ScriptBuilder.createCLTVPaymentChannelInput(fromSig, incorrectSig);
-        Script invalidScriptSig2 =
-                ScriptBuilder.createCLTVPaymentChannelInput(incorrectSig, toSig);
-
-        try {
-            scriptSig.correctlySpends(tx, 0, outputScript, Script.ALL_VERIFY_FLAGS);
-        } catch (ScriptException e) {
-            e.printStackTrace();
-            fail("Settle transaction failed to correctly spend the payment channel");
-        }
-
-        try {
-            refundSig.correctlySpends(tx, 0, outputScript, Script.ALL_VERIFY_FLAGS);
-            fail("Refund passed before expiry");
-        } catch (ScriptException e) { }
-        try {
-            invalidScriptSig1.correctlySpends(tx, 0, outputScript, Script.ALL_VERIFY_FLAGS);
-            fail("Invalid sig 1 passed");
-        } catch (ScriptException e) { }
-        try {
-            invalidScriptSig2.correctlySpends(tx, 0, outputScript, Script.ALL_VERIFY_FLAGS);
-            fail("Invalid sig 2 passed");
-        } catch (ScriptException e) { }
-    }
-
-    @Test
-    public void testCLTVPaymentChannelTransactionRefund() {
-        BigInteger time = BigInteger.valueOf(20);
-
-        ECKey from = new ECKey(), to = new ECKey(), incorrect = new ECKey();
-        Script outputScript = ScriptBuilder.createCLTVPaymentChannelOutput(time, from, to);
-
-        Transaction tx = new Transaction(UNITTEST);
-        tx.addInput(new TransactionInput(UNITTEST, tx, new byte[] {}));
-        tx.getInput(0).setSequenceNumber(0);
-        tx.setLockTime(time.add(BigInteger.ONE).longValue());
-        TransactionSignature fromSig =
-                tx.calculateSignature(
-                        0,
-                        from,
-                        outputScript,
-                        Transaction.SigHash.SINGLE,
-                        false);
-        TransactionSignature incorrectSig =
-                tx.calculateSignature(
-                        0,
-                        incorrect,
-                        outputScript,
-                        Transaction.SigHash.SINGLE,
-                        false);
-        Script scriptSig =
-                ScriptBuilder.createCLTVPaymentChannelRefund(fromSig);
-        Script invalidScriptSig =
-                ScriptBuilder.createCLTVPaymentChannelRefund(incorrectSig);
-
-        try {
-            scriptSig.correctlySpends(tx, 0, outputScript, Script.ALL_VERIFY_FLAGS);
-        } catch (ScriptException e) {
-            e.printStackTrace();
-            fail("Refund failed to correctly spend the payment channel");
-        }
-
-        try {
-            invalidScriptSig.correctlySpends(tx, 0, outputScript, Script.ALL_VERIFY_FLAGS);
-            fail("Invalid sig passed");
-        } catch (ScriptException e) { }
-    }
-
-    @Test
     public void witnessTransaction() {
         String hex;
         Transaction tx;
@@ -286,7 +181,7 @@ public class TransactionTest {
         for (TransactionInput in : tx.getInputs())
             assertFalse(in.hasWitness());
         assertEquals(3, tx.getOutputs().size());
-        assertEquals(hex, HEX.encode(tx.bitcoinSerialize()));
+        assertEquals(hex, tx.toHexString());
         assertEquals("Uncorrect hash", "38d4cfeb57d6685753b7a3b3534c3cb576c34ca7344cd4582f9613ebf0c2b02a",
                 tx.getTxId().toString());
         assertEquals(tx.getWTxId(), tx.getTxId());
@@ -300,7 +195,7 @@ public class TransactionTest {
         assertTrue(tx.getInput(0).hasWitness());
         assertFalse(tx.getInput(1).hasWitness());
         assertEquals(2, tx.getOutputs().size());
-        assertEquals(hex, HEX.encode(tx.bitcoinSerialize()));
+        assertEquals(hex, tx.toHexString());
         assertEquals("Uncorrect hash", "99e7484eafb6e01622c395c8cae7cb9f8822aab6ba993696b39df8b60b0f4b11",
                 tx.getTxId().toString());
         assertNotEquals(tx.getWTxId(), tx.getTxId());
@@ -320,7 +215,7 @@ public class TransactionTest {
                 + "9093510d00000000" + "1976a914" + "3bde42dbee7e4dbe6a21b2d50ce2f0167faa8159" + "88ac" // txOut
                 + "11000000"; // nLockTime
         Transaction tx = new Transaction(TESTNET, HEX.decode(txHex));
-        assertEquals(txHex, HEX.encode(tx.bitcoinSerialize()));
+        assertEquals(txHex, tx.toHexString());
         assertEquals(txHex.length() / 2, tx.getMessageSize());
         assertEquals(2, tx.getInputs().size());
         assertEquals(2, tx.getOutputs().size());
@@ -385,7 +280,7 @@ public class TransactionTest {
                 + "21" // push length
                 + "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357" // push
                 + "11000000"; // nLockTime
-        assertEquals(signedTxHex, HEX.encode(tx.bitcoinSerialize()));
+        assertEquals(signedTxHex, tx.toHexString());
         assertEquals(signedTxHex.length() / 2, tx.getMessageSize());
     }
 
@@ -401,7 +296,7 @@ public class TransactionTest {
                 + "0008af2f00000000" + "1976a914" + "fd270b1ee6abcaea97fea7ad0402e8bd8ad6d77c" + "88ac" // txOut
                 + "92040000"; // nLockTime
         Transaction tx = new Transaction(TESTNET, HEX.decode(txHex));
-        assertEquals(txHex, HEX.encode(tx.bitcoinSerialize()));
+        assertEquals(txHex, tx.toHexString());
         assertEquals(txHex.length() / 2, tx.getMessageSize());
         assertEquals(1, tx.getInputs().size());
         assertEquals(2, tx.getOutputs().size());
@@ -455,7 +350,7 @@ public class TransactionTest {
                 + "21" // push length
                 + "03ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a26873" // push
                 + "92040000"; // nLockTime
-        assertEquals(signedTxHex, HEX.encode(tx.bitcoinSerialize()));
+        assertEquals(signedTxHex, tx.toHexString());
         assertEquals(signedTxHex.length() / 2, tx.getMessageSize());
     }
 
@@ -735,7 +630,8 @@ public class TransactionTest {
 
         public HugeDeclaredSizeTransaction(NetworkParameters params, boolean hackInputsSize, boolean hackOutputsSize, boolean hackWitnessPushCountSize) {
             super(params);
-            this.protocolVersion = NetworkParameters.ProtocolVersion.WITNESS_VERSION.getBitcoinProtocolVersion();
+            setSerializer(serializer.withProtocolVersion(
+                    NetworkParameters.ProtocolVersion.WITNESS_VERSION.getBitcoinProtocolVersion()));
             Transaction inputTx = new Transaction(params);
             inputTx.addOutput(Coin.FIFTY_COINS, LegacyAddress.fromKey(params, ECKey.fromPrivate(BigInteger.valueOf(123456))));
             this.addInput(inputTx.getOutput(0));
@@ -788,5 +684,34 @@ public class TransactionTest {
             // lock_time
             uint32ToByteStreamLE(getLockTime(), stream);
         }
+    }
+
+    @Test
+    public void getWeightAndVsize() {
+        // example from https://en.bitcoin.it/wiki/Weight_units
+        String txHex = "0100000000010115e180dc28a2327e687facc33f10f2a20da717e5548406f7ae8b4c811072f85603000000171600141d7cd6c75c2e86f4cbf98eaed221b30bd9a0b928ffffffff019caef505000000001976a9141d7cd6c75c2e86f4cbf98eaed221b30bd9a0b92888ac02483045022100f764287d3e99b1474da9bec7f7ed236d6c81e793b20c4b5aa1f3051b9a7daa63022016a198031d5554dbb855bdbe8534776a4be6958bd8d530dc001c32b828f6f0ab0121038262a6c6cec93c2d3ecd6c6072efea86d02ff8e3328bbd0242b20af3425990ac00000000";
+        Transaction tx = new Transaction(UNITTEST, HEX.decode(txHex));
+        assertEquals(218, tx.getMessageSize());
+        assertEquals(542, tx.getWeight());
+        assertEquals(136, tx.getVsize());
+    }
+
+    @Test
+    public void nonSegwitZeroInputZeroOutputTx() {
+        // Non SegWit tx with zero input and outputs
+        String txHex = "010000000000f1f2f3f4";
+        Transaction tx = UNITTEST.getDefaultSerializer().makeTransaction(HEX.decode(txHex));
+        assertEquals(txHex, tx.toHexString());
+    }
+
+    @Test
+    public void nonSegwitZeroInputOneOutputTx() {
+        // Non SegWit tx with zero input and one output that has an amount of `0100000000000000` that could confuse
+        // a naive segwit parser. This can only be read with SegWit disabled
+        MessageSerializer serializer = UNITTEST.getDefaultSerializer();
+        String txHex = "0100000000010100000000000000016af1f2f3f4";
+        int protoVersionNoWitness = serializer.getProtocolVersion() | Transaction.SERIALIZE_TRANSACTION_NO_WITNESS;
+        tx = serializer.withProtocolVersion(protoVersionNoWitness).makeTransaction(HEX.decode(txHex));
+        assertEquals(txHex, tx.toHexString());
     }
 }

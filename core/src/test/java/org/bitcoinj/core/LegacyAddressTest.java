@@ -17,6 +17,8 @@
 
 package org.bitcoinj.core;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.Networks;
 import org.bitcoinj.params.TestNet3Params;
@@ -43,6 +45,16 @@ public class LegacyAddressTest {
     private static final NetworkParameters MAINNET = MainNetParams.get();
 
     @Test
+    public void equalsContract() {
+        EqualsVerifier.forClass(LegacyAddress.class)
+                .withPrefabValues(NetworkParameters.class, MAINNET, TESTNET)
+                .suppress(Warning.NULL_FIELDS)
+                .suppress(Warning.TRANSIENT_FIELDS)
+                .usingGetClass()
+                .verify();
+    }
+
+    @Test
     public void testJavaSerialization() throws Exception {
         LegacyAddress testAddress = LegacyAddress.fromBase58(TESTNET, "n4eA2nbYqErp7H6jebchxAN59DmNpMwi9g");
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -60,7 +72,7 @@ public class LegacyAddressTest {
     }
 
     @Test
-    public void stringification() throws Exception {
+    public void stringification() {
         // Test a testnet address.
         LegacyAddress a = LegacyAddress.fromPubKeyHash(TESTNET, HEX.decode("fda79a24e50ff70ff42f7d89585da5bd19d9e5cc"));
         assertEquals("n4eA2nbYqErp7H6jebchxAN59DmNpMwi9g", a.toString());
@@ -122,7 +134,7 @@ public class LegacyAddressTest {
     }
 
     @Test
-    public void getAltNetwork() throws Exception {
+    public void getAltNetwork() {
         // An alternative network
         class AltNetwork extends MainNetParams {
             AltNetwork() {
@@ -150,7 +162,7 @@ public class LegacyAddressTest {
     }
 
     @Test
-    public void p2shAddress() throws Exception {
+    public void p2shAddress() {
         // Test that we can construct P2SH addresses
         LegacyAddress mainNetP2SHAddress = LegacyAddress.fromBase58(MainNetParams.get(), "35b9vsyH1KoFT5a5KtrKusaCcPLkh4FHmu");
         assertEquals(mainNetP2SHAddress.getVersion(), MAINNET.p2shHeader);
@@ -177,7 +189,7 @@ public class LegacyAddressTest {
     }
 
     @Test
-    public void p2shAddressCreationFromKeys() throws Exception {
+    public void p2shAddressCreationFromKeys() {
         // import some keys from this example: https://gist.github.com/gavinandresen/3966071
         ECKey key1 = DumpedPrivateKey.fromBase58(MAINNET, "5JaTXbAUmfPYZFRwrYaALK48fN6sFJp4rHqq2QSXs8ucfqJV2TJ").getKey();
         key1 = ECKey.fromPrivate(key1.getPrivKeyBytes());
@@ -218,7 +230,7 @@ public class LegacyAddressTest {
     }
 
     @Test
-    public void comparisonLessThan() throws Exception {
+    public void comparisonLessThan() {
         LegacyAddress a = LegacyAddress.fromBase58(MAINNET, "FhyaAVWRzJDADnwGatPXzXzLEwNKszgS8Z");
         LegacyAddress b = LegacyAddress.fromBase58(MAINNET, "FihWfpc6qScLBAW6Crx2Wz5ZKGPwbvZQQa");
 
@@ -233,6 +245,16 @@ public class LegacyAddressTest {
 
         int result = a.compareTo(b);
         assertTrue(result > 0);
+    }
+
+    @Test
+    public void comparisonNotEquals() {
+        // These addresses only differ by version byte
+        LegacyAddress a = LegacyAddress.fromBase58(MAINNET, "14wivxvNTv9THhewPotsooizZawaWbEKE2");
+        LegacyAddress b = LegacyAddress.fromBase58(MAINNET, "35djrWQp1pTqNsMNWuZUES5vi7EJ74m9Eh");
+
+        int result = a.compareTo(b);
+        assertTrue(result != 0);
     }
 
     @Test

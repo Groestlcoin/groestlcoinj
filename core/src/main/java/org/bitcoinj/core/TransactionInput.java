@@ -24,7 +24,6 @@ import org.bitcoinj.wallet.KeyBag;
 import org.bitcoinj.wallet.RedeemData;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -32,6 +31,7 @@ import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkElementIndex;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -162,7 +162,7 @@ public class TransactionInput extends ChildMessage {
     protected void parse() throws ProtocolException {
         outpoint = new TransactionOutPoint(params, payload, cursor, this, serializer);
         cursor += outpoint.getMessageSize();
-        int scriptLen = (int) readVarInt();
+        int scriptLen = readVarInt().intValue();
         length = cursor - offset + scriptLen + 4;
         scriptBytes = readBytes(scriptLen);
         sequence = readUint32();
@@ -525,7 +525,7 @@ public class TransactionInput extends ChildMessage {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(sequence, outpoint, Arrays.hashCode(scriptBytes));
+        return Objects.hash(sequence, outpoint, Arrays.hashCode(scriptBytes));
     }
 
     /**

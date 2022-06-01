@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
@@ -47,15 +48,15 @@ import static com.google.common.base.Preconditions.checkState;
  */
 class ConnectionHandler implements MessageWriteTarget {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(ConnectionHandler.class);
+    // We lock when touching local flags and when writing data, but NEVER when calling any methods which leave this
+    // class into non-Java classes.
+    private final ReentrantLock lock = Threading.lock(ConnectionHandler.class);
 
     private static final int BUFFER_SIZE_LOWER_BOUND = 4096;
     private static final int BUFFER_SIZE_UPPER_BOUND = 65536;
 
     private static final int OUTBOUND_BUFFER_BYTE_COUNT = Message.MAX_SIZE + 24; // 24 byte message header
 
-    // We lock when touching local flags and when writing data, but NEVER when calling any methods which leave this
-    // class into non-Java classes.
-    private final ReentrantLock lock = Threading.lock("nioConnectionHandler");
     @GuardedBy("lock") private final ByteBuffer readBuff;
     @GuardedBy("lock") private final SocketChannel channel;
     @GuardedBy("lock") private final SelectionKey key;
@@ -233,7 +234,7 @@ class ConnectionHandler implements MessageWriteTarget {
                     return;
                 }
                 // "flip" the buffer - setting the limit to the current position and setting position to 0
-                handler.readBuff.flip();
+                ((Buffer) handler.readBuff).flip();
                 // Use connection.receiveBytes's return value as a check that it stopped reading at the right location
                 int bytesConsumed = checkNotNull(handler.connection).receiveBytes(handler.readBuff);
                 checkState(handler.readBuff.position() == bytesConsumed);

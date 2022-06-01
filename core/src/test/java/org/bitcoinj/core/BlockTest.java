@@ -23,6 +23,7 @@ import org.bitcoinj.core.AbstractBlockChain.NewBlockType;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.params.UnitTestParams;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptOpCodes;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.Wallet.BalanceType;
@@ -81,8 +82,7 @@ public class BlockTest {
     public void testBlockVerification() throws Exception {
         block1084745.verify(Block.BLOCK_HEIGHT_GENESIS, EnumSet.noneOf(Block.VerifyFlag.class));
     }
-    
-    @SuppressWarnings("deprecation")
+
     @Test
     public void testDate() throws Exception {
         assertEquals("9 May 2016 05:25:25 GMT", block1084745.getTime().toGMTString());
@@ -221,7 +221,7 @@ public class BlockTest {
         ECKey miningKey = DumpedPrivateKey.fromBase58(TESTNET, MINING_PRIVATE_KEY).getKey();
         assertNotNull(miningKey);
         Context context = new Context(TESTNET);
-        Wallet wallet = new Wallet(context);
+        Wallet wallet = Wallet.createDeterministic(context, Script.ScriptType.P2PKH);
         wallet.importKey(miningKey);
 
         // Initial balance should be zero by construction.
@@ -354,5 +354,14 @@ public class BlockTest {
         } catch (ProtocolException e) {
             //Expected, do nothing
         }
+    }
+
+    @Test
+    public void testGenesisBlock() {
+        Block genesisBlock = Block.createGenesis(MainNetParams.get());
+        genesisBlock.setDifficultyTarget(0x1d00ffffL);
+        genesisBlock.setTime(1231006505L);
+        genesisBlock.setNonce(2083236893);
+        assertEquals(Sha256Hash.wrap("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"), genesisBlock.getHash());
     }
 }

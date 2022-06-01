@@ -19,6 +19,7 @@ package org.bitcoinj.store;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -33,15 +34,23 @@ import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.Utils;
 import org.bitcoinj.params.UnitTestParams;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.base.Stopwatch;
 
 public class SPVBlockStoreTest {
-    private static final NetworkParameters UNITTEST = UnitTestParams.get();
+    private static NetworkParameters UNITTEST;
     private File blockStoreFile;
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        Utils.resetMocking();
+        UNITTEST = UnitTestParams.get();
+    }
 
     @Before
     public void setup() throws Exception {
@@ -145,5 +154,33 @@ public class SPVBlockStoreTest {
         assertTrue("took " + watch + " for " + ITERATIONS + " iterations",
                 watch.elapsed(TimeUnit.MILLISECONDS) < THRESHOLD_MS);
         store.close();
+    }
+
+    @Test
+    public void clear() throws Exception {
+        SPVBlockStore store = new SPVBlockStore(UNITTEST, blockStoreFile);
+
+        // Build a new block.
+        Address to = LegacyAddress.fromKey(UNITTEST, new ECKey());
+        StoredBlock genesis = store.getChainHead();
+        StoredBlock b1 = genesis.build(genesis.getHeader().createNextBlock(to).cloneAsHeader());
+        store.put(b1);
+        store.setChainHead(b1);
+        assertEquals(b1.getHeader().getHash(), store.getChainHead().getHeader().getHash());
+        store.clear();
+        assertNull(store.get(b1.getHeader().getHash()));
+        assertEquals(UNITTEST.getGenesisBlock().getHash(), store.getChainHead().getHeader().getHash());
+        store.close();
+    }
+
+    @Test
+    public void oneStoreDelete() throws Exception {
+        SPVBlockStore store = new SPVBlockStore(UNITTEST, blockStoreFile);
+        store.close();
+        boolean deleted = blockStoreFile.delete();
+        if (!Utils.isWindows()) {
+            // TODO: Deletion is failing on Windows
+            assertTrue(deleted);
+        }
     }
 }

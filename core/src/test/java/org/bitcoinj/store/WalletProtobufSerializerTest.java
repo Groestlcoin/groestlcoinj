@@ -60,6 +60,7 @@ import org.bitcoinj.wallet.WalletTransaction;
 import org.bitcoinj.wallet.WalletTransaction.Pool;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
@@ -78,7 +79,7 @@ import static org.junit.Assert.*;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class WalletProtobufSerializerTest {
-    private static final NetworkParameters UNITTEST = UnitTestParams.get();
+    private static NetworkParameters UNITTEST;
     private static final NetworkParameters MAINNET = MainNetParams.get();
 
     private ECKey myKey;
@@ -88,6 +89,12 @@ public class WalletProtobufSerializerTest {
 
     public static String WALLET_DESCRIPTION  = "The quick brown fox lives in \u4f26\u6566"; // Beijing in Chinese
     private long mScriptCreationTime;
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        Utils.resetMocking();
+        UNITTEST = UnitTestParams.get();
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -193,7 +200,7 @@ public class WalletProtobufSerializerTest {
         for (int i = 0 ; i < 20 ; i++) {
             myKey = new ECKey();
             myAddress = LegacyAddress.fromKey(UNITTEST, myKey);
-            myWallet = new Wallet(UNITTEST);
+            myWallet = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
             myWallet.importKey(myKey);
             Wallet wallet1 = roundTrip(myWallet);
             ECKey foundKey = wallet1.findKeyFromPubKeyHash(myKey.getPubKeyHash(), null);
@@ -207,7 +214,7 @@ public class WalletProtobufSerializerTest {
         // Test the lastBlockSeenHash field works.
 
         // LastBlockSeenHash should be empty if never set.
-        Wallet wallet = new Wallet(UNITTEST);
+        Wallet wallet = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         Protos.Wallet walletProto = new WalletProtobufSerializer().walletToProto(wallet);
         ByteString lastSeenBlockHash = walletProto.getLastSeenBlockHash();
         assertTrue(lastSeenBlockHash.isEmpty());
@@ -233,7 +240,7 @@ public class WalletProtobufSerializerTest {
 
     @Test
     public void testSequenceNumber() throws Exception {
-        Wallet wallet = new Wallet(UNITTEST);
+        Wallet wallet = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         Transaction tx1 = createFakeTx(UNITTEST, Coin.COIN, wallet.currentReceiveAddress());
         tx1.getInput(0).setSequenceNumber(TransactionInput.NO_SEQUENCE);
         wallet.receivePending(tx1, null);
@@ -358,7 +365,7 @@ public class WalletProtobufSerializerTest {
     @Test
     public void testRoundTripMarriedWallet() throws Exception {
         // create 2-of-2 married wallet
-        myWallet = new Wallet(UNITTEST);
+        myWallet = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         final DeterministicKeyChain partnerChain = DeterministicKeyChain.builder().random(new SecureRandom()).build();
         DeterministicKey partnerKey = DeterministicKey.deserializeB58(null, partnerChain.getWatchingKey().serializePubB58(UNITTEST), UNITTEST);
         MarriedKeyChain chain = MarriedKeyChain.builder()
@@ -429,7 +436,7 @@ public class WalletProtobufSerializerTest {
         assertTrue(wallet.getExtensions().containsKey("com.whatever.required"));
 
         // Non-mandatory extensions are ignored if the wallet doesn't know how to read them.
-        Wallet wallet2 = new Wallet(UNITTEST);
+        Wallet wallet2 = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         wallet2.addExtension(new FooWalletExtension("com.whatever.optional", false));
         Protos.Wallet proto2 = new WalletProtobufSerializer().walletToProto(wallet2);
         Wallet wallet5 = new WalletProtobufSerializer().readWallet(UNITTEST, null, proto2);

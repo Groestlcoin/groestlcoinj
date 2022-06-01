@@ -36,9 +36,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
@@ -48,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.io.BaseEncoding;
-import com.google.common.primitives.Ints;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.util.concurrent.Uninterruptibles.sleepUninterruptibly;
@@ -72,8 +68,6 @@ public class Utils {
      * forces bitcoinj to try to allocate a huge piece of the memory resulting in OutOfMemoryError.
     */
     public static final int MAX_INITIAL_ARRAY_LENGTH = 20;
-
-    private static BlockingQueue<Boolean> mockSleepQueue;
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
 
@@ -426,18 +420,29 @@ public class Utils {
     }
 
     /**
+     * Clears the mock clock and sleep
+     */
+    public static void resetMocking() {
+        mockTime = null;
+    }
+
+    /**
      * Returns the current time, or a mocked out equivalent.
      */
     public static Date now() {
         return mockTime != null ? mockTime : new Date();
     }
 
-    // TODO: Replace usages of this where the result is / 1000 with currentTimeSeconds.
-    /** Returns the current time in milliseconds since the epoch, or a mocked out equivalent. */
+    /**
+     * Returns the current time in milliseconds since the epoch, or a mocked out equivalent.
+     */
     public static long currentTimeMillis() {
         return mockTime != null ? mockTime.getTime() : System.currentTimeMillis();
     }
 
+    /**
+     * Returns the current time in seconds since the epoch, or a mocked out equivalent.
+     */
     public static long currentTimeSeconds() {
         return currentTimeMillis() / 1000;
     }
@@ -475,44 +480,6 @@ public class Utils {
     /** Sets the given bit in data to one, using little endian (not the same as Java native big endian) */
     public static void setBitLE(byte[] data, int index) {
         data[index >>> 3] |= bitMask[7 & index];
-    }
-
-    /** Sleep for a span of time, or mock sleep if enabled */
-    public static void sleep(long millis) {
-        if (mockSleepQueue == null) {
-            sleepUninterruptibly(millis, TimeUnit.MILLISECONDS);
-        } else {
-            try {
-                boolean isMultiPass = mockSleepQueue.take();
-                rollMockClockMillis(millis);
-                if (isMultiPass)
-                    mockSleepQueue.offer(true);
-            } catch (InterruptedException e) {
-                // Ignored.
-            }
-        }
-    }
-
-    /** Enable or disable mock sleep.  If enabled, set mock time to current time. */
-    public static void setMockSleep(boolean isEnable) {
-        if (isEnable) {
-            mockSleepQueue = new ArrayBlockingQueue<>(1);
-            mockTime = new Date(System.currentTimeMillis());
-        } else {
-            mockSleepQueue = null;
-        }
-    }
-
-    /** Let sleeping thread pass the synchronization point.  */
-    public static void passMockSleep() {
-        mockSleepQueue.offer(false);
-    }
-
-    /** Let the sleeping thread pass the synchronization point any number of times. */
-    public static void finishMockSleep() {
-        if (mockSleepQueue != null) {
-            mockSleepQueue.offer(true);
-        }
     }
 
     private enum Runtime {

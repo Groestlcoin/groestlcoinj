@@ -23,7 +23,6 @@ import org.bitcoinj.script.Script;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.primitives.UnsignedBytes;
 import org.bitcoin.NativeSecp256k1;
@@ -60,6 +59,7 @@ import java.security.SecureRandom;
 import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -143,8 +143,7 @@ public class ECKey implements EncryptableItem {
         secureRandom = new SecureRandom();
     }
 
-    // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
-    // can only verify signatures not make them.
+    // The two parts of the key. If "pub" is set but not "priv", we can only verify signatures, not make them.
     @Nullable protected final BigInteger priv;  // A field element.
     protected final LazyECPoint pub;
 
@@ -177,12 +176,12 @@ public class ECKey implements EncryptableItem {
         ECPrivateKeyParameters privParams = (ECPrivateKeyParameters) keypair.getPrivate();
         ECPublicKeyParameters pubParams = (ECPublicKeyParameters) keypair.getPublic();
         priv = privParams.getD();
-        pub = getPointWithCompression(pubParams.getQ(), true);
+        pub = new LazyECPoint(pubParams.getQ(), true);
         creationTimeSeconds = Utils.currentTimeSeconds();
     }
 
     protected ECKey(@Nullable BigInteger priv, ECPoint pub, boolean compressed) {
-        this(priv, getPointWithCompression(checkNotNull(pub), compressed));
+        this(priv, new LazyECPoint(checkNotNull(pub), compressed));
     }
 
     protected ECKey(@Nullable BigInteger priv, LazyECPoint pub) {
@@ -199,23 +198,19 @@ public class ECKey implements EncryptableItem {
     }
 
     /**
-     * Utility for compressing an elliptic curve point. Returns the same point if it's already compressed.
-     * See the ECKey class docs for a discussion of point compression.
+     * @deprecated Use {@link LazyECPoint#compress()}
      */
+    @Deprecated
     public static LazyECPoint compressPoint(LazyECPoint point) {
-        return point.isCompressed() ? point : getPointWithCompression(point.get(), true);
+        return point.compress();
     }
 
     /**
-     * Utility for decompressing an elliptic curve point. Returns the same point if it's already uncompressed.
-     * See the ECKey class docs for a discussion of point compression.
+     * @deprecated Use {@link LazyECPoint#decompress()}
      */
+    @Deprecated
     public static LazyECPoint decompressPoint(LazyECPoint point) {
-        return !point.isCompressed() ? point : getPointWithCompression(point.get(), false);
-    }
-
-    private static LazyECPoint getPointWithCompression(ECPoint point, boolean compressed) {
-        return new LazyECPoint(point, compressed);
+        return point.decompress();
     }
 
     /**
@@ -240,7 +235,7 @@ public class ECKey implements EncryptableItem {
      */
     public static ECKey fromPrivate(BigInteger privKey, boolean compressed) {
         ECPoint point = publicPointFromPrivate(privKey);
-        return new ECKey(privKey, getPointWithCompression(point, compressed));
+        return new ECKey(privKey, new LazyECPoint(point, compressed));
     }
 
     /**
@@ -308,7 +303,7 @@ public class ECKey implements EncryptableItem {
         if (!pub.isCompressed())
             return this;
         else
-            return new ECKey(priv, getPointWithCompression(pub.get(), false));
+            return new ECKey(priv, new LazyECPoint(pub.get(), false));
     }
 
     /**
@@ -363,7 +358,7 @@ public class ECKey implements EncryptableItem {
         if (pubKey == null) {
             // Derive public from private.
             ECPoint point = publicPointFromPrivate(privKey);
-            this.pub = getPointWithCompression(point, compressed);
+            this.pub = new LazyECPoint(point, compressed);
         } else {
             // We expect the pubkey to be in regular encoded form, just as a BigInteger. Therefore the first byte is
             // a special marker byte.
@@ -609,7 +604,7 @@ public class ECKey implements EncryptableItem {
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(r, s);
+            return Objects.hash(r, s);
         }
     }
 
@@ -1228,11 +1223,11 @@ public class ECKey implements EncryptableItem {
         if (this == o) return true;
         if (o == null || !(o instanceof ECKey)) return false;
         ECKey other = (ECKey) o;
-        return Objects.equal(this.priv, other.priv)
-                && Objects.equal(this.pub, other.pub)
-                && Objects.equal(this.creationTimeSeconds, other.creationTimeSeconds)
-                && Objects.equal(this.keyCrypter, other.keyCrypter)
-                && Objects.equal(this.encryptedPrivateKey, other.encryptedPrivateKey);
+        return Objects.equals(this.priv, other.priv)
+                && Objects.equals(this.pub, other.pub)
+                && Objects.equals(this.creationTimeSeconds, other.creationTimeSeconds)
+                && Objects.equals(this.keyCrypter, other.keyCrypter)
+                && Objects.equals(this.encryptedPrivateKey, other.encryptedPrivateKey);
     }
 
     @Override

@@ -20,6 +20,7 @@ package org.bitcoinj.core;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.params.UnitTestParams;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.MemoryBlockStore;
@@ -83,9 +84,9 @@ public class BlockChainTest {
         BriefLogFormatter.initVerbose();
         Utils.setMockClock(); // Use mock clock
         Context.propagate(new Context(TESTNET, 100, Coin.ZERO, false));
-        testNetChain = new BlockChain(TESTNET, new Wallet(TESTNET), new MemoryBlockStore(TESTNET));
+        testNetChain = new BlockChain(TESTNET, Wallet.createDeterministic(TESTNET, Script.ScriptType.P2PKH), new MemoryBlockStore(TESTNET));
         Context.propagate(new Context(UNITTEST, 100, Coin.ZERO, false));
-        wallet = new Wallet(UNITTEST) {
+        wallet = new Wallet(Context.get()) {
             @Override
             public void receiveFromBlock(Transaction tx, StoredBlock block, BlockChain.NewBlockType blockType,
                                          int relativityOffset) throws VerificationException {
@@ -163,7 +164,7 @@ public class BlockChainTest {
         // Add a bunch of blocks in a loop until we reach a difficulty transition point. The unit test params have an
         // artificially shortened period.
         Block prev = UNITTEST.getGenesisBlock();
-        Utils.setMockClock(Utils.currentTimeSeconds());
+        Utils.setMockClock();
         for (int height = 0; height < UNITTEST.getInterval() - 1; height++) {
             Block newBlock = prev.createNextBlock(coinbaseTo, 1, Utils.currentTimeSeconds(), height);
             assertTrue(chain.add(newBlock));
@@ -321,7 +322,7 @@ public class BlockChainTest {
         // Check that a coinbase transaction is only available to spend after NetworkParameters.getSpendableCoinbaseDepth() blocks.
 
         // Create a second wallet to receive the coinbase spend.
-        Wallet wallet2 = new Wallet(UNITTEST);
+        Wallet wallet2 = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         ECKey receiveKey = wallet2.freshReceiveKey();
         int height = 1;
         chain.addWallet(wallet2);
