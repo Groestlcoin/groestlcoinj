@@ -19,13 +19,10 @@ public class Groestl {
 
         try {
             System.loadLibrary("groestld");
+            log.info("Successfully loaded groestld");
             native_library_loaded = true;
         }
-        catch(UnsatisfiedLinkError x)
-        {
-            native_library_loaded = false;
-        }
-        catch(Exception e)
+        catch(UnsatisfiedLinkError | Exception x)
         {
             native_library_loaded = false;
         }
@@ -50,7 +47,7 @@ public class Groestl {
 
     static native byte [] groestld_native(byte [] input, int offset, int len);
 
-    static byte [] groestl(byte header[])
+    static byte [] groestl(byte[] header)
     {
         Groestl512 hasher1 = new Groestl512();
         Groestl512 hasher2 = new Groestl512();
@@ -60,7 +57,7 @@ public class Groestl {
         return new Sha512Hash(hash2).trim256().getBytes();
     }
 
-    static byte [] groestl(byte header[], int offset, int length)
+    static byte [] groestl(byte[] header, int offset, int length)
     {
         final Groestl512 digestGroestl = new Groestl512();
         digestGroestl.reset();
