@@ -77,6 +77,10 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
+tasks.withType(Test) {
+    systemProperty "java.library.path", "../contrib/groestld/build"
+}
+
 artifacts {
     archives sourcesJar
     archives javadocJar
@@ -85,13 +89,13 @@ artifacts {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = 'bitcoinj-core'
+            artifactId = 'groestlcoinj-core'
             from components.java
             artifact sourcesJar
             artifact javadocJar
 
             pom {
-                description = 'A Java Bitcoin library'
+                description = 'A Java Groestlcoin library'
             }
         }
     }
