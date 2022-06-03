@@ -79,7 +79,6 @@ public class UnitTestParams extends AbstractBitcoinNetParams {
             if (genesisBlock == null) {
                 genesisBlock = Block.createGenesis(this);
                 genesisBlock.setDifficultyTarget(Block.EASIEST_DIFFICULTY_TARGET);
-                genesisBlock.setDifficultyTarget(Block.STANDARD_MAX_DIFFICULTY_TARGET_TESTNET);
                 genesisBlock.setVersion(3);
                 genesisBlock.setTime(Utils.currentTimeSeconds());
                 genesisBlock.solve();
