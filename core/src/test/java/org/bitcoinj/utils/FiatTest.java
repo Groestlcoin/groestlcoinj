@@ -26,27 +26,27 @@ public class FiatTest {
 
     @Test
     public void testParseAndValueOf() {
-        assertEquals(Fiat.valueOf("EUR", 10000), parseFiat("EUR", "1"));
-        assertEquals(Fiat.valueOf("EUR", 100), parseFiat("EUR", "0.01"));
-        assertEquals(Fiat.valueOf("EUR", 1), parseFiat("EUR", "0.0001"));
-        assertEquals(Fiat.valueOf("EUR", -10000), parseFiat("EUR", "-1"));
+        assertEquals(Fiat.valueOf("EUR", 100000000), parseFiat("EUR", "1"));
+        assertEquals(Fiat.valueOf("EUR", 1000000), parseFiat("EUR", "0.01"));
+        assertEquals(Fiat.valueOf("EUR", 10000), parseFiat("EUR", "0.0001"));
+        assertEquals(Fiat.valueOf("EUR", -100000000), parseFiat("EUR", "-1"));
     }
 
     @Test
     public void testParseFiat() {
-        assertEquals(1, Fiat.parseFiat("EUR", "0.0001").value);
-        assertEquals(1, Fiat.parseFiat("EUR", "0.00010").value);
+        assertEquals(10000, Fiat.parseFiat("EUR", "0.0001").value);
+        assertEquals(10000, Fiat.parseFiat("EUR", "0.00010").value);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testParseFiatOverprecise() {
-        Fiat.parseFiat("EUR", "0.00011");
+        Fiat.parseFiat("EUR", "0.000000011");
     }
 
     @Test
     public void testParseFiatInexact() {
-        assertEquals(1, Fiat.parseFiatInexact("EUR", "0.0001").value);
-        assertEquals(1, Fiat.parseFiatInexact("EUR", "0.00011").value);
+        assertEquals(10000, Fiat.parseFiatInexact("EUR", "0.0001").value);
+        assertEquals(11000, Fiat.parseFiatInexact("EUR", "0.00011").value);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -64,7 +64,7 @@ public class FiatTest {
 
     @Test
     public void testToPlainString() {
-        assertEquals("0.0015", Fiat.valueOf("EUR", 15).toPlainString());
+        assertEquals("0.0015", Fiat.valueOf("EUR", 150000).toPlainString());
         assertEquals("1.23", parseFiat("EUR", "1.23").toPlainString());
 
         assertEquals("0.1", parseFiat("EUR", "0.1").toPlainString());
@@ -103,8 +103,8 @@ public class FiatTest {
     @Test
     public void testValueFetching() {
         Fiat fiat = parseFiat("USD", "666");
-        assertEquals(6660000, fiat.longValue());
-        assertEquals("6660000", fiat.toString());
+        assertEquals(66600000000L, fiat.longValue());
+        assertEquals("66600000000", fiat.toString());
     }
 
     @Test
@@ -113,28 +113,28 @@ public class FiatTest {
         Fiat fiatB = parseFiat("USD", "2");
 
         Fiat sumResult = fiatA.add(fiatB);
-        assertEquals(6680000, sumResult.getValue());
+        assertEquals(66800000000L, sumResult.getValue());
         assertEquals("USD", sumResult.getCurrencyCode());
 
         Fiat subResult = fiatA.subtract(fiatB);
-        assertEquals(6640000, subResult.getValue());
+        assertEquals(66400000000L, subResult.getValue());
         assertEquals("USD", subResult.getCurrencyCode());
 
         Fiat divResult = fiatA.divide(2);
-        assertEquals(3330000, divResult.getValue());
+        assertEquals(33300000000L, divResult.getValue());
         assertEquals("USD", divResult.getCurrencyCode());
 
         long ldivResult = fiatA.divide(fiatB);
         assertEquals(333, ldivResult);
 
         Fiat mulResult = fiatA.multiply(2);
-        assertEquals(13320000, mulResult.getValue());
+        assertEquals(133200000000L, mulResult.getValue());
 
         Fiat[] fiats = fiatA.divideAndRemainder(3);
         assertEquals(2, fiats.length);
 
         Fiat fiat1 = fiats[0];
-        assertEquals(2220000, fiat1.getValue());
+        assertEquals(22200000000L, fiat1.getValue());
         assertEquals("USD", fiat1.getCurrencyCode());
 
         Fiat fiat2 = fiats[1];
