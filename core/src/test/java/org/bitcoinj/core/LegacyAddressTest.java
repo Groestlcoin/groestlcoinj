@@ -250,10 +250,10 @@ public class LegacyAddressTest {
     @Test
     public void comparisonNotEquals() {
         // These addresses only differ by version byte
-        LegacyAddress a = LegacyAddress.fromBase58(MAINNET, "14wivxvNTv9THhewPotsooizZawaWbEKE2");
-        LegacyAddress b = LegacyAddress.fromBase58(MAINNET, "35djrWQp1pTqNsMNWuZUES5vi7EJ74m9Eh");
+        LegacyAddress a = LegacyAddress.fromBase58(MAINNET, "FZ7SNsek2QpzjJg4GutMGKXKDkDY5gCt7k");
+        LegacyAddress b = LegacyAddress.fromBase58(MAINNET, "35djrWQp1pTqNsMNWuZUES5vi7EJ3RkaiE");
 
-        int result = a.compareTo(b);
+        int result = b.compareTo(a);
         assertTrue(result != 0);
     }
 
