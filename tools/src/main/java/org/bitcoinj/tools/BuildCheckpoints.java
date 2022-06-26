@@ -125,8 +125,8 @@ public class BuildCheckpoints implements Callable<Integer> {
             peerGroup.addPeerDiscovery(new DnsDiscovery(params));
             peerGroup.start();
 
-            // Connect to at least 4 peers because some may not support download
-            Future<List<Peer>> future = peerGroup.waitForPeers(4);
+            // Connect to at least 2 peers because some may not support download
+            Future<List<Peer>> future = peerGroup.waitForPeers(2);
             System.out.println("Connecting to " + params.getId() + ", timeout 20 seconds...");
             // throw timeout exception if we can't get peers
             future.get(20, SECONDS);

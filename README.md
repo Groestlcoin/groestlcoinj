@@ -1,8 +1,6 @@
-[![Github Build Status](https://github.com/bitcoinj/bitcoinj/workflows/Java%20CI/badge.svg)](https://github.com/bitcoinj/bitcoinj/actions)
-[![GitLab Build Status](https://gitlab.com/bitcoinj/bitcoinj/badges/master/pipeline.svg)](https://gitlab.com/bitcoinj/bitcoinj/pipelines)
-[![Coverage Status](https://coveralls.io/repos/bitcoinj/bitcoinj/badge.png?branch=master)](https://coveralls.io/r/bitcoinj/bitcoinj?branch=master)
+[![Github Build Status](https://github.com/Groestlcoin/groestlcoinj/workflows/Java%20CI/badge.svg)](https://github.com/Groestlcoin/groestlcoinj/actions)
 
-[![Visit our IRC channel](https://kiwiirc.com/buttons/irc.freenode.net/bitcoinj.png)](https://kiwiirc.com/client/irc.freenode.net/bitcoinj)
+[![Visit our IRC channel](https://kiwiirc.com/nextclient/irc.libera.chat/groestlcoin.png)](https://kiwiirc.com/nextclient/irc.libera.chat/groestlcoin)
 
 ### Welcome to groestlcoinj
 
@@ -41,11 +39,11 @@ Alternatively, just import the project using your IDE. [IntelliJ](http://www.jet
 
 ### Building and Using the Wallet Tool
 
-The **bitcoinj** `tools` subproject includes a command-line Wallet Tool (`wallet-tool`) that can be used to create and manage **bitcoinj**-based wallets (both the HD keychain and SPV blockchain state.) Using `wallet-tool` on Bitcoin's test net is a great way to learn about Bitcoin and **bitcoinj**.
+The **groestlcoinj** `tools` subproject includes a command-line Wallet Tool (`wallet-tool`) that can be used to create and manage **groestlcoinj**-based wallets (both the HD keychain and SPV blockchain state.) Using `wallet-tool` on Groestlcoin's test net is a great way to learn about Groestlcoin and **groestlcoinj**.
 
 To build an executable shell script that runs the command-line Wallet Tool, use:
 ```
-gradle bitcoinj-tools:installDist
+gradle groestlcoinj-tools:installDist
 ```
 
 You can now run the `wallet-tool` without parameters to get help on its operation:
@@ -53,22 +51,22 @@ You can now run the `wallet-tool` without parameters to get help on its operatio
 ./tools/build/install/wallet-tool/bin/wallet-tool
 ```
 
-To create a test net wallet file in `~/bitcoinj/bitcoinj-test.wallet`, you would use:
+To create a test net wallet file in `~/groestlcoinj/groestlcoinj-test.wallet`, you would use:
 ```
-mkdir ~/bitcoinj
+mkdir ~/groestlcoinj
 ```
 ```
-./tools/build/install/wallet-tool/bin/wallet-tool --net=TEST --wallet=$HOME/bitcoinj/bitcoinj-test.wallet create
-```
-
-To sync the newly created wallet in `~/bitcoinj/bitcoinj-test.wallet` with the test net, you would use:
-```
-./tools/build/install/wallet-tool/bin/wallet-tool --net=TEST --wallet=$HOME/bitcoinj/bitcoinj-test.wallet sync
+./tools/build/install/wallet-tool/bin/wallet-tool --net=TEST --wallet=$HOME/groestlcoinj/groestlcoinj-test.wallet create
 ```
 
-To dump the state of the wallet in `~/bitcoinj/bitcoinj-test.wallet` with the test net, you would use:
+To sync the newly created wallet in `~/groestlcoinj/groestlcoinj-test.wallet` with the test net, you would use:
 ```
-./tools/build/install/wallet-tool/bin/wallet-tool --net=TEST --wallet=$HOME/bitcoinj/bitcoinj-test.wallet dump
+./tools/build/install/wallet-tool/bin/wallet-tool --net=TEST --wallet=$HOME/groestlcoinj/groestlcoinj-test.wallet sync
+```
+
+To dump the state of the wallet in `~/groestlcoinj/groestlcoinj-test.wallet` with the test net, you would use:
+```
+./tools/build/install/wallet-tool/bin/wallet-tool --net=TEST --wallet=$HOME/groestlcoinj/groestlcoinj-test.wallet dump
 ```
 
 Note: These instructions are for macOS/Linux, for Windows use the `tools/build/install/wallet-tool/bin/wallet-tool.bat` batch file with the equivalent Windows command-line commands and options.
@@ -76,17 +74,3 @@ Note: These instructions are for macOS/Linux, for Windows use the `tools/build/i
 ### Example applications
 
 These are found in the `examples` module.
-
-### Where next?
-
-Now you are ready to [follow the tutorial](https://bitcoinj.github.io/getting-started).
-
-### Testing a SNAPSHOT build
-
-Building apps with official releases of **bitcoinj** is covered in the [tutorial](https://bitcoinj.github.io/getting-started).
-
-If you want to develop or test your app with a [Jitpack](https://jitpack.io)-powered build of the latest `master` or `release-0.15` branch of **bitcoinj** follow the dynamically-generated instructions for that branch by following the correct link.
-
-
-* [master](https://jitpack.io/#bitcoinj/bitcoinj/master-SNAPSHOT) branch
-* [release-0.15](https://jitpack.io/#bitcoinj/bitcoinj/release-0.15-SNAPSHOT) branch

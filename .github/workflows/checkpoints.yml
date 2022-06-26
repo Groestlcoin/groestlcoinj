@@ -1,0 +1,41 @@
+name: Checkpoints
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: set NOW env
+      run: echo "NOW=$(date +'%d.%m.%Y')" >> $GITHUB_ENV
+
+    - name: Build mainnet checkpoints
+      run: ./tools/build-checkpoints --net=PROD
+
+    - name: Build testnet checkpoints
+      run: ./tools/build-checkpoints --net=TEST
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: checkpoints-${{ env.NOW }}
+        path: |
+          tools/checkpoints.txt
+          tools/checkpoints-testnet.txt
+        if-no-files-found: error
+        retention-days: 7
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: checkpoints-${{ env.NOW }}

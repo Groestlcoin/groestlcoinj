@@ -6,21 +6,11 @@ import java.math.BigInteger;
 import java.net.URI;
 import java.util.Map;
 
-/**
- * Created with IntelliJ IDEA.
- * User: HashEngineering
- * Date: 8/13/13
- * Time: 7:23 PM
- * To change this template use File | Settings | File Templates.
- */
 public class CoinDefinition {
-
 
     public static final String coinName = "Groestlcoin";
     public static final String coinTicker = "GRS";
     public static final String coinURIScheme = "groestlcoin";
-    public static final String cryptsyMarketId = "26";
-    public static final String cryptsyMarketCurrency = "BTC";
     public static final String PATTERN_PRIVATE_KEY_START = "[56]";
     public static final String PATTERN_PRIVATE_KEY_START_COMPRESSED = "[KL]";
     public static final String PATTERN_PRIVATE_KEY_START_TESTNET = "9";
@@ -33,8 +23,8 @@ public class CoinDefinition {
     public static boolean checkpointFileSupport = true;
     public static int checkpointDaysBack = 21;
 
-    public static final int TARGET_TIMESPAN = (int)(86400);  // 1 day per difficulty cycle, on average.
-    public static final int TARGET_SPACING = (int)(1 * 60);  // 60 seconds per block.
+    public static final int TARGET_TIMESPAN = 1 * 24 * 60 * 60;  // 1 day per difficulty cycle, on average.
+    public static final int TARGET_SPACING = 60;  // 60 seconds per block.
     public static final int INTERVAL = TARGET_TIMESPAN / TARGET_SPACING;  //108 blocks
 
     public static final int getIntervalCheckpoints() {
@@ -43,18 +33,13 @@ public class CoinDefinition {
     }
     public static int spendableCoinbaseDepth = 120; //main.h: static const int CINBASE_MATURITY
     public static final int MAX_COINS = 105000000;                 //main.h:  MAX_MONEY
-
-
     public static final Coin DEFAULT_MIN_TX_FEE = Coin.valueOf(10000);   // MIN_TX_FEE
     public static final Coin DUST_LIMIT = Coin.valueOf(10000); //main.h CTransaction::GetMinFee        0.01 coins
-
-    public static final int PROTOCOL_VERSION = 70002;          //version.h PROTOCOL_VERSION
-    public static final int MIN_PROTOCOL_VERSION = 209;        //version.h MIN_PROTO_VERSION
+    public static final int PROTOCOL_VERSION = 70013;          //version.h PROTOCOL_VERSION
+    public static final int MIN_PROTOCOL_VERSION = 31800;        //version.h MIN_PROTO_VERSION
     public static final int INIT_PROTO_VERSION = 209;            //version.h
-
     public static final int BLOCK_CURRENTVERSION = 112;   //CBlock::CURRENT_VERSION
     public static final int MAX_BLOCK_SIZE = 1 * 1000 * 1000;
-
 
     public static final boolean supportsBloomFiltering = true; //Requires PROTOCOL_VERSION 70000 in the client
     public static boolean supportsIrcDiscovery() {
@@ -80,16 +65,10 @@ public class CoinDefinition {
     static public int genesisBlockVersion = 112; //main.cpp: LoadBlockIndex
     //taken from the raw data of the block explorer
 
-    static public String genesisTxInBytes = "04ffff001d0104325072657373757265206d75737420626520707574206f6e20566c6164696d697220507574696e206f766572204372696d6561";   //"Digitalcoin, A Currency for a Digital Age"
+    // "Pressure must be put on Vladimir Putin over Crimea"
+    static public String genesisTxInBytes = "04ffff001d0104325072657373757265206d75737420626520707574206f6e20566c6164696d697220507574696e206f766572204372696d6561";
     static public String genesisTxOutBytes = "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f";
-
-
-
     static public String genesisMerkleRoot = "3ce968df58f9c8a752306c4b7264afab93149dbc578bd08a42c446caaa6628bb";
-
-
-     // "Pressure must be put on Vladimir Putin over Crimea"
-
 
     //net.cpp strDNSSeed
     static public String[] dnsSeeds = new String[] {
@@ -97,12 +76,6 @@ public class CoinDefinition {
             "dnsseed2.groestlcoin.org",
             "dnsseed3.groestlcoin.org",
             "dnsseed4.groestlcoin.org",
-            "groestlsight.groestlcoin.org",
-            "groestlcoin.org",
-            "electrum1.groestlcoin.org",
-            "electrum2.groestlcoin.org",
-            "electrum20.groestlcoin.org",
-            "jswallet.groestlcoin.org",
     };
 
     public static final HttpDiscovery.Details[] httpSeeds = new HttpDiscovery.Details[] {
@@ -165,7 +138,6 @@ public class CoinDefinition {
 
     public static Coin GetBlockSubsidy(int nHeight){
 
-
         if (nHeight == 0)
         {
             return nGenesisBlockRewardCoin;
@@ -174,16 +146,6 @@ public class CoinDefinition {
         if (nHeight == 1)
         {
             return nPremine;
-		/*
-		optimized standalone cpu miner 	60*512=30720
-		standalone gpu miner 			120*512=61440
-		first pool			 			70*512 =35840
-		block-explorer		 			60*512 =30720
-		mac wallet binary    			30*512 =15360
-		linux wallet binary  			30*512 =15360
-		web-site						100*512	=51200
-		total									=240640
-		*/
         }
 
         Coin nSubsidy = Coin.valueOf(512);
@@ -237,12 +199,7 @@ public class CoinDefinition {
     static public String[] testnetDnsSeeds = new String[] {
             "testnet-seed1.groestlcoin.org",
             "testnet-seed2.groestlcoin.org",
-            "testnet1.groestlcoin.org",
-            "testnet2.groestlcoin.org"
     };
-    //from main.h: CAlert::CheckSignature
-    public static final String SATOSHI_KEY = "04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284";
-    public static final String TESTNET_SATOSHI_KEY = "04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a";
 
     /** The string returned by getId() for the main, production network where people trade things. */
     public static final String ID_MAINNET = "org.groestlcoin.production";
@@ -258,14 +215,10 @@ public class CoinDefinition {
         checkpoints.put( 28888, Sha256Hash.wrap("00000000000228ce19f55cf0c45e04c7aa5a6a873ed23902b3654c3c49884502"));
         checkpoints.put( 58888, Sha256Hash.wrap("0000000000dd85f4d5471febeb174a3f3f1598ab0af6616e9f266b56272274ef"));
         checkpoints.put(111111, Sha256Hash.wrap("00000000013de206275ee83f93bee57622335e422acbf126a37020484c6e113c"));
-        checkpoints.put(222222, Sha256Hash.wrap("00000000077f5f09288285b68d68636e652f672279ba6a014fdc404fe902a631"));
-        checkpoints.put(333333, Sha256Hash.wrap("00000000121e477df65543cd7289c4790ad6fee6cfa48b4391cc594141356d5f"));
-        checkpoints.put(444444, Sha256Hash.wrap("0000000029558b975a9507a32895735b9d9437308fa3302e02ca3103d61d6447"));
-        checkpoints.put(555555, Sha256Hash.wrap("000000000d62c3e8b8983f21b86123a5deea9ebabd162c6b13428e92866a6c1f"));
-        checkpoints.put(666666, Sha256Hash.wrap("000000000603db2b89e2194214d41ccff6d1181e2d80774cf65d834e5bbd8ea1"));
-        checkpoints.put(777777, Sha256Hash.wrap("00000000000649a9cd35bc39ab705379139cd72142dcba83c79ca425bc399c0b"));
-        checkpoints.put(888888, Sha256Hash.wrap("000000000cce6537f3d8b22ab70a9925ba34bd9a9f850c9644f69d11ba0393e9"));
-        checkpoints.put(917000, Sha256Hash.wrap("0000000012fe97c83a908d3217ce2df025fb8ba32c88bd86a14eb329e6c7259d"));
+        checkpoints.put(1000000, Sha256Hash.wrap("000000000df8560f2612d5f28b52ed1cf81b0f87ac0c9c7242cbcf721ca6854a"));
+        checkpoints.put(2000000, Sha256Hash.wrap("00000000000434d5b8d1c3308df7b6e3fd773657dfb28f5dd2f70854ef94cc66"));
+        checkpoints.put(2372000, Sha256Hash.wrap("000000000000117a4710e01e4f86d883ca491b96efa0b4f2139c4d49a9437f10"));
+        checkpoints.put(2785000, Sha256Hash.wrap("00000000000013811b5078b06f3b98aaad29b94f09d047144e473de35f481474"));
     }
 
     //Unit Test Information
