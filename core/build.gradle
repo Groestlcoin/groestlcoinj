@@ -77,13 +77,36 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
+publishToMavenLocal.dependsOn('pom')
+task('pom', type: Copy) {
+    dependsOn 'generatePomFileForMavenJavaPublication'
+    from "${buildDir}/publications/mavenJava/pom-default.xml"
+    into "${buildDir}/libs"
+    rename 'pom-default.xml', 'groestlcoinj-core-' + version + '.pom'
+    doLast {
+        ant.checksum algorithm: 'md5', file: "${buildDir}/libs/groestlcoinj-core-${version}.pom"
+        ant.checksum algorithm: 'sha1', file: "${buildDir}/libs/groestlcoinj-core-${version}.pom"
+    }
+}
+
 tasks.withType(Test) {
     systemProperty "java.library.path", "../contrib/groestld/build"
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
 }
 
 artifacts {
     archives sourcesJar
     archives javadocJar
+}
+
+tasks.withType(Jar) { task ->
+    task.doLast {
+        ant.checksum algorithm: 'md5', file: it.archivePath
+        ant.checksum algorithm: 'sha1', file: it.archivePath
+    }
 }
 
 publishing {
@@ -95,7 +118,27 @@ publishing {
             artifact javadocJar
 
             pom {
+                name = "groestlcoinj-core"
                 description = 'A Java Groestlcoin library'
+                url = 'https://github.com/Groestlcoin/groestlcoinj'
+                scm {
+                    connection = 'scm:svn:https://github.com/Groestlcoin/groestlcoinj'
+                    developerConnection = 'scm:svn:https://github.com/Groestlcoin/groestlcoinj'
+                    url = 'https://github.com/Groestlcoin/groestlcoinj'
+                }
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'hashengineering'
+                        name = 'HashEngineering'
+                        email = 'hashengineeringsolutions@gmail.com'
+                    }
+                }
             }
         }
     }

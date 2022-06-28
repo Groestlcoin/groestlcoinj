@@ -1,0 +1,42 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        java: ['8', '11', '17']
+        distribution: ['temurin']
+        gradle: ['7.2']
+      fail-fast: false
+    name: JAVA ${{ matrix.distribution }} ${{ matrix.java }} OS ${{ matrix.os }} Gradle ${{ matrix.gradle }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: ${{ matrix.distribution }}
+          java-version: ${{ matrix.java }}
+      - name: Build Groestld library
+        run: |
+          cd contrib/groestld
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+          cd ../../..
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v1
+        with:
+          gradle-version: ${{ matrix.gradle }}
+          arguments: publishToMavenLocal --stacktrace
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: groestlcoinj-core-${{ matrix.java }}-${{ matrix.os }}
+          path: |
+            core/build/libs/
