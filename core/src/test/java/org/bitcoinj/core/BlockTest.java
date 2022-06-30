@@ -251,8 +251,8 @@ public class BlockTest {
 
         // Nevertheless, there is a witness commitment (but no witness reserved).
         Transaction coinbase = block481815.getTransactions().get(0);
-        assertEquals("919a0df2253172a55bebcb9002dbe775b8511f84955b282ca6dae826fdd94f90", coinbase.getTxId().toString());
-        assertEquals("919a0df2253172a55bebcb9002dbe775b8511f84955b282ca6dae826fdd94f90",
+        assertEquals("8e7659a80f56168ea1cf0002c997df1eabbf6224bedf047aa3cbd2e7ffc8c6a5", coinbase.getTxId().toString());
+        assertEquals("8e7659a80f56168ea1cf0002c997df1eabbf6224bedf047aa3cbd2e7ffc8c6a5",
                 coinbase.getWTxId().toString());
         Sha256Hash witnessCommitment = coinbase.findWitnessCommitment();
         assertEquals("3d03076733467c45b08ec503a0c5d406647b073e1914d35b5111960ed625f3b7", witnessCommitment.toString());
@@ -265,12 +265,12 @@ public class BlockTest {
         assertEquals(2020, block481829.getTransactions().size());
         assertEquals("f06f697be2cac7af7ed8cd0b0b81eaa1a39e444c6ebd3697e35ab34461b6c58d",
                 block481829.getMerkleRoot().toString());
-        assertEquals("0a02ddb2f86a14051294f8d98dd6959dd12bf3d016ca816c3db9b32d3e24fc2d",
+        assertEquals("0f50cea19329b4d334718105cd7288ad057057a304c0b1b1bc40bc99f58e1ea7",
                 block481829.getWitnessRoot().toString());
 
         Transaction coinbase = block481829.getTransactions().get(0);
-        assertEquals("9c1ab453283035800c43eb6461eb46682b81be110a0cb89ee923882a5fd9daa4", coinbase.getTxId().toString());
-        assertEquals("2bbda73aa4e561e7f849703994cc5e563e4bcf103fb0f6fef5ae44c95c7b83a6",
+        assertEquals("012e2c43bb826d6d9e8013cb131b0851cc7db2a540c303e48325c24dc9587f01", coinbase.getTxId().toString());
+        assertEquals("f7ba6b4e6573b527a9ddbcff60ed070dcceee09e8c9d431171f16159a3cdc0ed",
                 coinbase.getWTxId().toString());
         Sha256Hash witnessCommitment = coinbase.findWitnessCommitment();
         assertEquals("c3c1145d8070a57e433238e42e4c022c1e51ca2a958094af243ae1ee252ca106", witnessCommitment.toString());
@@ -362,6 +362,6 @@ public class BlockTest {
         genesisBlock.setDifficultyTarget(0x1d00ffffL);
         genesisBlock.setTime(1231006505L);
         genesisBlock.setNonce(2083236893);
-        assertEquals(Sha256Hash.wrap("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"), genesisBlock.getHash());
+        assertEquals(Sha256Hash.wrap("f1ddcd0c453ebd8f79f12bd2cad35048c46de619eba05441f581c3f9643428f7"), genesisBlock.getHash());
     }
 }
