@@ -312,7 +312,7 @@ public class FakeTxBuilder {
 
     public static Block makeSolvedTestBlock(Block prev, Transaction... transactions) throws BlockStoreException {
         Address to = LegacyAddress.fromKey(prev.getParams(), new ECKey());
-        Block b = prev.createNextBlock(to);
+        Block b = prev.createNextBlock(to, Block.BLOCK_HEIGHT_UNKNOWN);
         // Coinbase tx already exists.
         for (Transaction tx : transactions) {
             b.addTransaction(tx);
@@ -322,7 +322,7 @@ public class FakeTxBuilder {
     }
 
     public static Block makeSolvedTestBlock(Block prev, Address to, Transaction... transactions) throws BlockStoreException {
-        Block b = prev.createNextBlock(to);
+        Block b = prev.createNextBlock(to, Block.BLOCK_HEIGHT_UNKNOWN);
         // Coinbase tx already exists.
         for (Transaction tx : transactions) {
             b.addTransaction(tx);

@@ -1009,7 +1009,7 @@ public class Block extends Message {
         if (to != null) {
             // Add a transaction paying 50 coins to the "to" address.
             Transaction t = new Transaction(params);
-            t.addOutput(new TransactionOutput(params, t, FIFTY_COINS, to));
+            t.addOutput(new TransactionOutput(params, t, ((AbstractBitcoinNetParams)params).getBlockInflation(height), to));
             // The input does not really need to be a valid signature, as long as it has the right general form.
             TransactionInput input;
             if (prevOut == null) {
@@ -1056,8 +1056,13 @@ public class Block extends Message {
     }
 
     @VisibleForTesting
+    public Block createNextBlock(@Nullable Address to, int height) {
+        return createNextBlock(to, ((AbstractBitcoinNetParams)params).getBlockInflation(height));
+    }
+
+    @VisibleForTesting
     public Block createNextBlock(@Nullable Address to) {
-        return createNextBlock(to, FIFTY_COINS);
+        return createNextBlock(to, Block.BLOCK_HEIGHT_UNKNOWN);
     }
 
     @VisibleForTesting
@@ -1073,7 +1078,7 @@ public class Block extends Message {
     @VisibleForTesting
     Block createNextBlockWithCoinbase(long version, byte[] pubKey, final int height) {
         return createNextBlock(null, version, (TransactionOutPoint) null,
-                               Utils.currentTimeSeconds(), pubKey, FIFTY_COINS, height);
+                               Utils.currentTimeSeconds(), pubKey, ((AbstractBitcoinNetParams)params).getBlockInflation(height), height);
     }
 
     @VisibleForTesting

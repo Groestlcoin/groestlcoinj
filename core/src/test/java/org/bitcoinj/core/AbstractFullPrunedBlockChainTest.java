@@ -18,6 +18,7 @@
 package org.bitcoinj.core;
 
 import com.google.common.collect.Lists;
+import org.bitcoinj.params.AbstractBitcoinNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.UnitTestParams;
 import org.bitcoinj.script.Script;
@@ -192,11 +193,11 @@ public abstract class AbstractFullPrunedBlockChainTest {
         
         WeakReference<UTXO> out = new WeakReference<>
                 (store.getTransactionOutput(spendableOutput.getHash(), spendableOutput.getIndex()));
-        rollingBlock = rollingBlock.createNextBlock(null);
+        rollingBlock = rollingBlock.createNextBlock(null, height++);
         
         Transaction t = new Transaction(PARAMS);
         // Entirely invalid scriptPubKey
-        t.addOutput(new TransactionOutput(PARAMS, t, FIFTY_COINS, new byte[]{}));
+        t.addOutput(new TransactionOutput(PARAMS, t, ((AbstractBitcoinNetParams)PARAMS).getBlockInflation(height), new byte[]{}));
         t.addSignedInput(spendableOutput, new Script(spendableOutputScriptPubKey), outKey);
         rollingBlock.addTransaction(t);
         rollingBlock.solve();
@@ -213,7 +214,7 @@ public abstract class AbstractFullPrunedBlockChainTest {
         
         // Create a chain longer than UNDOABLE_BLOCKS_STORED
         for (int i = 0; i < UNDOABLE_BLOCKS_STORED; i++) {
-            rollingBlock = rollingBlock.createNextBlock(null);
+            rollingBlock = rollingBlock.createNextBlock(null, height + i);
             chain.add(rollingBlock);
         }
         // Try to get the garbage collector to run

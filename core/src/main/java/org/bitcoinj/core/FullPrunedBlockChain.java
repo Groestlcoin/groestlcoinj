@@ -304,7 +304,7 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
                 if (valueOut.signum() < 0 || valueOut.compareTo(params.getMaxMoney()) > 0)
                     throw new VerificationException("Transaction output value out of range");
                 if (isCoinBase) {
-                    coinbaseValue = valueOut;
+                    coinbaseValue = getBlockInflation(height);
                 } else {
                     if (valueIn.compareTo(valueOut) < 0 || valueIn.compareTo(params.getMaxMoney()) > 0)
                         throw new VerificationException("Transaction input value out of range");
