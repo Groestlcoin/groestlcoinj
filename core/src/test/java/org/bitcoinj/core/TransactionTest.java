@@ -182,7 +182,7 @@ public class TransactionTest {
             assertFalse(in.hasWitness());
         assertEquals(3, tx.getOutputs().size());
         assertEquals(hex, tx.toHexString());
-        assertEquals("Uncorrect hash", "38d4cfeb57d6685753b7a3b3534c3cb576c34ca7344cd4582f9613ebf0c2b02a",
+        assertEquals("Incorrect hash", "909bc29350b9e1d2f5246f704a210b27cb1c2985a9ceff090df1c6dcf3187bbd",
                 tx.getTxId().toString());
         assertEquals(tx.getWTxId(), tx.getTxId());
         assertEquals(hex.length() / 2, tx.getMessageSize());
@@ -196,7 +196,7 @@ public class TransactionTest {
         assertFalse(tx.getInput(1).hasWitness());
         assertEquals(2, tx.getOutputs().size());
         assertEquals(hex, tx.toHexString());
-        assertEquals("Uncorrect hash", "99e7484eafb6e01622c395c8cae7cb9f8822aab6ba993696b39df8b60b0f4b11",
+        assertEquals("Uncorrect hash", "15e279b47ad691ecb217235516370731e59cfad949a28d59b1efb4e79f4adf03",
                 tx.getTxId().toString());
         assertNotEquals(tx.getWTxId(), tx.getTxId());
         assertEquals(hex.length() / 2, tx.getMessageSize());
@@ -232,24 +232,24 @@ public class TransactionTest {
         assertEquals("00141d0f172a0ecb48aee1be1f2687d2963ae33f71a1", HEX.encode(scriptPubKey1.getProgram()));
         txIn1.connect(new TransactionOutput(TESTNET, null, Coin.COIN.multiply(6), scriptPubKey1.getProgram()));
 
-        assertEquals("63cec688ee06a91e913875356dd4dea2f8e0f2a2659885372da2a37e32c7532e",
+        assertEquals("20815d7bebd740c2ca02c27b40ff30c85a46d3790eeee870282dda44f9dfa767",
                 tx.hashForSignature(0, scriptPubKey0, Transaction.SigHash.ALL, false).toString());
         TransactionSignature txSig0 = tx.calculateSignature(0, key0,
                 scriptPubKey0,
                 Transaction.SigHash.ALL, false);
-        assertEquals("30450221008b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01",
+        assertEquals("3045022100bc15ec81f4ba0f7c0fbc855ed064df6d707ab54ad7cc13c9a6b8912486ce630e02205d34554704473f23049cd8364fa978acb6ef130ec9ecdd52d4c42a1143d92e4f01",
                 HEX.encode(txSig0.encodeToBitcoin()));
 
         Script witnessScript = ScriptBuilder.createP2PKHOutputScript(key1);
         assertEquals("76a9141d0f172a0ecb48aee1be1f2687d2963ae33f71a188ac",
                 HEX.encode(witnessScript.getProgram()));
 
-        assertEquals("c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670",
+        assertEquals("78d30165e9873c05d3e3eea458d41559dbb42ad5bb79db4e5be4827a05ed62b4",
                 tx.hashForWitnessSignature(1, witnessScript, txIn1.getValue(), Transaction.SigHash.ALL, false).toString());
         TransactionSignature txSig1 = tx.calculateWitnessSignature(1, key1,
                 witnessScript, txIn1.getValue(),
                 Transaction.SigHash.ALL, false);
-        assertEquals("304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee"
+        assertEquals("3045022100f310126d85d03a055d5e7b109819e201e37475ef83fc84097f3e9c8342eb7d0402206cd7ebd621a557506ccf4445cd6b9186955eb260a16fe9cf9de7efaf87affdfb"
                         + "01",
                 HEX.encode(txSig1.encodeToBitcoin()));
 
@@ -261,13 +261,15 @@ public class TransactionTest {
         txIn1.setWitness(TransactionWitness.redeemP2WPKH(txSig1, key1));
         // no redeem script for p2wpkh
         assertTrue(correctlySpends(txIn1, scriptPubKey1, 1));
+// expected: 00000049483045022100[8b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01eeffffffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffffffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac000247304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee]  0121025476c2e8318836
+// was:<...: 00000049483045022100[bc15ec81f4ba0f7c0fbc855ed064df6d707ab54ad7cc13c9a6b8912486ce630e02205d34554704473f23049cd8364fa978acb6ef130ec9ecdd52d4c42a1143d92e4f01eeffffffef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a0100000000ffffffff02202cb206000000001976a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac9093510d000000001976a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac0002483045022100f310126d85d03a055d5e7b109819e201e37475ef83fc84097f3e9c8342eb7d0402206cd7ebd621a557506ccf4445cd6b9186955eb260a16fe9cf9de7efaf87affdfb]0121025476c2e8318836
 
         String signedTxHex = "01000000" // version
                 + "00" // marker
                 + "01" // flag
                 + "02" // num txIn
                 + "fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f" + "00000000"
-                + "494830450221008b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01"
+                + "49483045022100bc15ec81f4ba0f7c0fbc855ed064df6d707ab54ad7cc13c9a6b8912486ce630e02205d34554704473f23049cd8364fa978acb6ef130ec9ecdd52d4c42a1143d92e4f01"
                 + "eeffffff" // txIn
                 + "ef51e1b804cc89d182d279655c3aa89e815b1b309fe287d9b2b55d57b90ec68a" + "01000000" + "00" + "ffffffff" // txIn
                 + "02" // num txOut
@@ -275,8 +277,8 @@ public class TransactionTest {
                 + "9093510d00000000" + "1976a914" + "3bde42dbee7e4dbe6a21b2d50ce2f0167faa8159" + "88ac" // txOut
                 + "00" // witness (empty)
                 + "02" // witness (2 pushes)
-                + "47" // push length
-                + "304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee01" // push
+                + "48" // push length
+                + "3045022100f310126d85d03a055d5e7b109819e201e37475ef83fc84097f3e9c8342eb7d0402206cd7ebd621a557506ccf4445cd6b9186955eb260a16fe9cf9de7efaf87affdfb01" // push
                 + "21" // push length
                 + "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357" // push
                 + "11000000"; // nLockTime
@@ -320,13 +322,13 @@ public class TransactionTest {
         assertEquals("76a91479091972186c449eb1ded22b78e40d009bdf008988ac",
                 HEX.encode(witnessScript.getProgram()));
 
-        assertEquals("64f3b0f4dd2bb3aa1ce8566d220cc74dda9df97d8490cc81d89d735c92e59fb6",
+        assertEquals("12885c3df56d146075151c6dbf2afe9506333d4f3e6cea38f58ca8520805a30f",
                 tx.hashForWitnessSignature(0, witnessScript, Coin.COIN.multiply(10), Transaction.SigHash.ALL, false)
                         .toString());
         TransactionSignature txSig = tx.calculateWitnessSignature(0, key,
                 witnessScript, Coin.COIN.multiply(10),
                 Transaction.SigHash.ALL, false);
-        assertEquals("3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb"
+        assertEquals("304402205413503534045b69a912ed7c5e64e6f97a70076502c0909f920419f19f3c764802203d1bb5da17b671504abf70bf5db720e382e5dedd07130e6249f9b35e358ee0dd"
                         + "01",
                 HEX.encode(txSig.encodeToBitcoin()));
 
@@ -346,7 +348,7 @@ public class TransactionTest {
                 + "0008af2f00000000" + "1976a914" + "fd270b1ee6abcaea97fea7ad0402e8bd8ad6d77c" + "88ac" // txOut
                 + "02" // witness (2 pushes)
                 + "47" // push length
-                + "3044022047ac8e878352d3ebbde1c94ce3a10d057c24175747116f8288e5d794d12d482f0220217f36a485cae903c713331d877c1f64677e3622ad4010726870540656fe9dcb01" // push
+                + "304402205413503534045b69a912ed7c5e64e6f97a70076502c0909f920419f19f3c764802203d1bb5da17b671504abf70bf5db720e382e5dedd07130e6249f9b35e358ee0dd01" // push
                 + "21" // push length
                 + "03ad1d8e89212f0b92c74d23bb710c00662ad1470198ac48c43f7d6f93a2a26873" // push
                 + "92040000"; // nLockTime
@@ -368,13 +370,13 @@ public class TransactionTest {
         Transaction tx = new Transaction(TESTNET, HEX.decode(txHex));
 
         ECKey pubKey = ECKey.fromPublicOnly(HEX.decode(
-                "02d8b661b0b3302ee2f162b09e07a55ad5dfbe673a9f01d9f0c19617681024306b"));
+                "025428f15acc4581cb80675d5e8c20da69d54590693305e10f3f3378a8309c94b2"));
         Script script = new Script(HEX.decode(
-                "56210307b8ae49ac90a048e9b53357a2354b3334e9c8bee813ecb98e99a7e07e8c3ba32103b28f0c28bfab54554ae8c658ac5c3e0ce6e79ad336331f78c428dd43eea8449b21034b8113d703413d57761b8b9781957b8c0ac1dfe69f492580ca4195f50376ba4a21033400f6afecb833092a9a21cfdf1ed1376e58c5d1f47de74683123987e967a8f42103a6d48b1131e94ba04d9737d61acdaa1322008af9602b3b14862c07a1789aac162102d8b661b0b3302ee2f162b09e07a55ad5dfbe673a9f01d9f0c19617681024306b56ae"));
+                "56210307b8ae49ac90a048e9b53357a2354b3334e9c8bee813ecb98e99a7e07e8c3ba32103b28f0c28bfab54554ae8c658ac5c3e0ce6e79ad336331f78c428dd43eea8449b21034b8113d703413d57761b8b9781957b8c0ac1dfe69f492580ca4195f50376ba4a21033400f6afecb833092a9a21cfdf1ed1376e58c5d1f47de74683123987e967a8f42103a6d48b1131e94ba04d9737d61acdaa1322008af9602b3b14862c07a1789aac1621025428f15acc4581cb80675d5e8c20da69d54590693305e10f3f3378a8309c94b256ae"));
         Sha256Hash hash = tx.hashForWitnessSignature(0, script, Coin.valueOf(987654321L),
                 Transaction.SigHash.SINGLE, true);
         TransactionSignature signature = TransactionSignature.decodeFromBitcoin(HEX.decode(
-                "30440220525406a1482936d5a21888260dc165497a90a15669636d8edca6b9fe490d309c022032af0c646a34a44d1f4576bf6a4a74b67940f8faa84c7df9abe12a01a11e2b4783"), true, true);
+                "3045022100e2f8d04dbb268a242255639d6d7a4595fb3fd3304d0da8b932d91e25d7547a2502203313487b18f37d71fbb316a699468b1df48adafd3aa55fed08c38520c8037d5083"), true, true);
         assertTrue(pubKey.verify(hash, signature));
     }
 
