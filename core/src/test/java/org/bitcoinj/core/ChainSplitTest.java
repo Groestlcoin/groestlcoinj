@@ -100,7 +100,7 @@ public class ChainSplitTest {
         assertFalse(reorgHappened.get());
         assertEquals(2, walletChanged.get());
         // We got two blocks which sent 50 coins each to us.
-        assertEquals(Coin.valueOf(100, 0), wallet.getBalance());
+        assertEquals(Coin.valueOf(10, 0), wallet.getBalance());
         // We now have the following chain:
         //     genesis -> b1 -> b2
         //
@@ -115,7 +115,7 @@ public class ChainSplitTest {
         Threading.waitForUserCode();
         assertFalse(reorgHappened.get());  // No re-org took place.
         assertEquals(2, walletChanged.get());
-        assertEquals(Coin.valueOf(100, 0), wallet.getBalance());
+        assertEquals(Coin.valueOf(10, 0), wallet.getBalance());
         // Check we can handle multi-way splits: this is almost certainly going to be extremely rare, but we have to
         // handle it anyway. The same transaction appears in b7/b8 (side chain) but not b2 or b3.
         //     genesis -> b1--> b2
@@ -134,7 +134,7 @@ public class ChainSplitTest {
         assertEquals(2, wallet.getTransaction(tHash).getAppearsInHashes().size());
         assertFalse(reorgHappened.get());  // No re-org took place.
         assertEquals(5, walletChanged.get());
-        assertEquals(Coin.valueOf(100, 0), wallet.getBalance());
+        assertEquals(Coin.valueOf(10, 0), wallet.getBalance());
         // Now we add another block to make the alternative chain longer.
         assertTrue(chain.add(b3.createNextBlock(someOtherGuy)));
         Threading.waitForUserCode();
@@ -146,7 +146,7 @@ public class ChainSplitTest {
         //                  \-> b3 -> b4
         // We lost some coins! b2 is no longer a part of the best chain so our available balance should drop to 50.
         // It's now pending reconfirmation.
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
         // ... and back to the first chain.
         Block b5 = b2.createNextBlock(coinsTo);
         Block b6 = b5.createNextBlock(coinsTo);
@@ -159,7 +159,7 @@ public class ChainSplitTest {
         Threading.waitForUserCode();
         assertTrue(reorgHappened.get());
         assertEquals(9, walletChanged.get());
-        assertEquals(Coin.valueOf(200, 0), wallet.getBalance());
+        assertEquals(Coin.valueOf(20, 0), wallet.getBalance());
     }
 
     @Test
@@ -178,7 +178,7 @@ public class ChainSplitTest {
         assertTrue(chain.add(b3));
         assertEquals(Coin.ZERO, wallet.getBalance());
         assertTrue(chain.add(b4));
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
     }
 
     @Test
@@ -186,16 +186,16 @@ public class ChainSplitTest {
         // Check that we can handle our own spends being rolled back by a fork.
         Block b1 = UNITTEST.getGenesisBlock().createNextBlock(coinsTo);
         chain.add(b1);
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
         Address dest = LegacyAddress.fromKey(UNITTEST, new ECKey());
-        Transaction spend = wallet.createSend(dest, valueOf(10, 0));
+        Transaction spend = wallet.createSend(dest, valueOf(1, 0));
         wallet.commitTx(spend);
         // Waiting for confirmation ... make it eligible for selection.
         assertEquals(Coin.ZERO, wallet.getBalance());
         spend.getConfidence().markBroadcastBy(new PeerAddress(UNITTEST, InetAddress.getByAddress(new byte[]{1, 2, 3, 4})));
         spend.getConfidence().markBroadcastBy(new PeerAddress(UNITTEST, InetAddress.getByAddress(new byte[]{5,6,7,8})));
         assertEquals(ConfidenceType.PENDING, spend.getConfidence().getConfidenceType());
-        assertEquals(valueOf(40, 0), wallet.getBalance());
+        assertEquals(valueOf(4, 0), wallet.getBalance());
         Block b2 = b1.createNextBlock(someOtherGuy);
         b2.addTransaction(spend);
         b2.solve();
@@ -209,7 +209,7 @@ public class ChainSplitTest {
         chain.add(b3);
         chain.add(b4);
         // b4 causes a re-org that should make our spend go pending again.
-        assertEquals(valueOf(40, 0), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertEquals(valueOf(4, 0), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
         assertEquals(ConfidenceType.PENDING, spend.getConfidence().getConfidenceType());
     }
 
@@ -220,9 +220,9 @@ public class ChainSplitTest {
         // keys are being shared between wallets.
         Block b1 = UNITTEST.getGenesisBlock().createNextBlock(coinsTo);
         chain.add(b1);
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
         Address dest = LegacyAddress.fromKey(UNITTEST, new ECKey());
-        Transaction spend = wallet.createSend(dest, FIFTY_COINS);
+        Transaction spend = wallet.createSend(dest, FIVE_COINS);
         // We do NOT confirm the spend here. That means it's not considered to be pending because createSend is
         // stateless. For our purposes it is as if some other program with our keys created the tx.
         //
@@ -251,7 +251,7 @@ public class ChainSplitTest {
         Block b1 = UNITTEST.getGenesisBlock().createNextBlock(coinsTo);
         chain.add(b1);
         final Transaction t = b1.transactions.get(1);
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
         // genesis -> b1
         //         -> b2
         Block b2 = UNITTEST.getGenesisBlock().createNextBlock(coinsTo);
@@ -261,13 +261,13 @@ public class ChainSplitTest {
         b2.addTransaction(t);
         b2.solve();
         chain.add(roundtrip(b2));
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
         assertTrue(wallet.isConsistent());
         assertEquals(2, wallet.getTransaction(t.getTxId()).getAppearsInHashes().size());
         //          -> b2 -> b3
         Block b3 = b2.createNextBlock(someOtherGuy);
         chain.add(b3);
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
 
     }
 
@@ -291,7 +291,7 @@ public class ChainSplitTest {
         b3.addTransaction(b2.transactions.get(1));
         b3.solve();
         chain.add(roundtrip(b3));
-        assertEquals(FIFTY_COINS, wallet.getBalance());
+        assertEquals(FIVE_COINS, wallet.getBalance());
     }
 
     @Test
@@ -311,9 +311,9 @@ public class ChainSplitTest {
         Block b1 = UNITTEST.getGenesisBlock().createNextBlock(coinsTo);
         chain.add(b1);
 
-        Transaction t1 = wallet.createSend(someOtherGuy, valueOf(10, 0));
+        Transaction t1 = wallet.createSend(someOtherGuy, valueOf(1, 0));
         Address yetAnotherGuy = LegacyAddress.fromKey(UNITTEST, new ECKey());
-        Transaction t2 = wallet.createSend(yetAnotherGuy, valueOf(20, 0));
+        Transaction t2 = wallet.createSend(yetAnotherGuy, valueOf(2, 0));
         wallet.commitTx(t1);
         // Receive t1 as confirmed by the network.
         Block b2 = b1.createNextBlock(LegacyAddress.fromKey(UNITTEST, new ECKey()));
@@ -331,7 +331,7 @@ public class ChainSplitTest {
         Threading.waitForUserCode();
         // Should have seen a double spend.
         assertTrue(eventCalled[0]);
-        assertEquals(valueOf(30, 0), wallet.getBalance());
+        assertEquals(valueOf(3, 0), wallet.getBalance());
     }
 
     @Test
@@ -350,19 +350,19 @@ public class ChainSplitTest {
             }
         });
 
-        // Start with 50 coins.
+        // Start with 5 coins.
         Block b1 = UNITTEST.getGenesisBlock().createNextBlock(coinsTo);
         chain.add(b1);
 
-        Transaction t1 = checkNotNull(wallet.createSend(someOtherGuy, valueOf(10, 0)));
+        Transaction t1 = checkNotNull(wallet.createSend(someOtherGuy, valueOf(1, 0)));
         Address yetAnotherGuy = LegacyAddress.fromKey(UNITTEST, new ECKey());
-        Transaction t2 = checkNotNull(wallet.createSend(yetAnotherGuy, valueOf(20, 0)));
+        Transaction t2 = checkNotNull(wallet.createSend(yetAnotherGuy, valueOf(2, 0)));
         wallet.commitTx(t1);
         // t1 is still pending ...
         Block b2 = b1.createNextBlock(LegacyAddress.fromKey(UNITTEST, new ECKey()));
         chain.add(b2);
         assertEquals(ZERO, wallet.getBalance());
-        assertEquals(valueOf(40, 0), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
+        assertEquals(valueOf(4, 0), wallet.getBalance(Wallet.BalanceType.ESTIMATED));
 
         // Now we make a double spend become active after a re-org.
         // genesis -> b1 -> b2 [t1 pending]
@@ -379,7 +379,7 @@ public class ChainSplitTest {
         //              \-> b3 (t2) -> b4
         assertEquals(t1, eventDead[0]);
         assertEquals(t2, eventReplacement[0]);
-        assertEquals(valueOf(30, 0), wallet.getBalance());
+        assertEquals(valueOf(3, 0), wallet.getBalance());
 
         // ... and back to our own parallel universe.
         Block b5 = b2.createNextBlock(LegacyAddress.fromKey(UNITTEST, new ECKey()));
@@ -506,7 +506,7 @@ public class ChainSplitTest {
         assertEquals(4, txns.get(1).getConfidence().getDepthInBlocks());
         assertEquals(3, txns.get(2).getConfidence().getDepthInBlocks());
 
-        assertEquals(Coin.valueOf(250, 0), wallet.getBalance());
+        assertEquals(Coin.valueOf(25, 0), wallet.getBalance());
 
         // Now add two more blocks that don't send coins to us. Despite being irrelevant the wallet should still update.
         Block b9 = b8.createNextBlock(someOtherGuy);
@@ -600,7 +600,7 @@ public class ChainSplitTest {
             chain.add(firstTip);
         }
         // ... and spend.
-        Transaction fodder = wallet.createSend(LegacyAddress.fromKey(UNITTEST, new ECKey()), FIFTY_COINS);
+        Transaction fodder = wallet.createSend(LegacyAddress.fromKey(UNITTEST, new ECKey()), FIVE_COINS);
         wallet.commitTx(fodder);
         final AtomicBoolean fodderIsDead = new AtomicBoolean(false);
         fodder.getConfidence().addEventListener(Threading.SAME_THREAD, new TransactionConfidence.Listener() {
