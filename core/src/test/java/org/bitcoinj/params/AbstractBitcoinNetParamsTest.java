@@ -39,29 +39,38 @@ public class AbstractBitcoinNetParamsTest {
 
     @Test
     public void isDifficultyTransitionPoint() {
-        assertFalse(BITCOIN_PARAMS.isDifficultyTransitionPoint(2014));
-        assertTrue(BITCOIN_PARAMS.isDifficultyTransitionPoint(2015));
-        assertFalse(BITCOIN_PARAMS.isDifficultyTransitionPoint(2016));
+        assertFalse(BITCOIN_PARAMS.isDifficultyTransitionPoint(1438));
+        assertTrue(BITCOIN_PARAMS.isDifficultyTransitionPoint(1439));
+        assertFalse(BITCOIN_PARAMS.isDifficultyTransitionPoint(1440));
     }
 
     @Test
     public void isRewardHalvingPoint() {
-        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(209999));
+        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(10079));
 
-        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(419999));
+        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(100799));
 
-        assertFalse(BITCOIN_PARAMS.isRewardHalvingPoint(629998));
-        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(629999));
-        assertFalse(BITCOIN_PARAMS.isRewardHalvingPoint(630000));
+        assertFalse(BITCOIN_PARAMS.isRewardHalvingPoint(100800));
+        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(201599));
+        assertFalse(BITCOIN_PARAMS.isRewardHalvingPoint(201601));
 
-        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(839999));
+        assertTrue(BITCOIN_PARAMS.isRewardHalvingPoint(1007999));
     }
 
     @Test
     public void getBlockInflation() {
-        assertEquals(Coin.FIFTY_COINS, BITCOIN_PARAMS.getBlockInflation(209998));
-        assertEquals(Coin.FIFTY_COINS, BITCOIN_PARAMS.getBlockInflation(209999));
-        assertEquals(Coin.FIFTY_COINS.div(2), BITCOIN_PARAMS.getBlockInflation(210000));
-        assertEquals(Coin.FIFTY_COINS.div(2), BITCOIN_PARAMS.getBlockInflation(210001));
+        assertEquals(Coin.COIN, BITCOIN_PARAMS.getBlockInflation(0));
+        assertEquals(Coin.PREMINE_COINS, BITCOIN_PARAMS.getBlockInflation(1));
+        assertEquals(Coin.MAX_REWARD_COINS, BITCOIN_PARAMS.getBlockInflation(2));
+
+        assertEquals(Coin.MAX_REWARD_COINS, BITCOIN_PARAMS.getBlockInflation(10078));
+        assertEquals(Coin.MAX_REWARD_COINS, BITCOIN_PARAMS.getBlockInflation(10079));
+        assertEquals(Coin.valueOf(48128000000L), BITCOIN_PARAMS.getBlockInflation(10081));
+        assertEquals(Coin.valueOf(48128000000L), BITCOIN_PARAMS.getBlockInflation(10082));
+
+        assertEquals(Coin.valueOf(29337333871L), BITCOIN_PARAMS.getBlockInflation(100798));
+        assertEquals(Coin.valueOf(29337333871L), BITCOIN_PARAMS.getBlockInflation(100799));
+        assertEquals(Coin.valueOf(27577093838L), BITCOIN_PARAMS.getBlockInflation(100801));
+        assertEquals(Coin.valueOf(27577093838L), BITCOIN_PARAMS.getBlockInflation(100802));
     }
 }
