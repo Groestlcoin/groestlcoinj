@@ -74,6 +74,10 @@ public final class Coin implements Monetary, Comparable<Coin>, Serializable {
 
     public static final Coin FIFTY_COINS = COIN.multiply(50);
 
+    public static final Coin PREMINE_COINS = COIN.multiply(240640);
+
+    public static final Coin MAX_REWARD_COINS = COIN.multiply(512);
+
     /**
      * Represents a monetary value of minus one satoshi.
      */

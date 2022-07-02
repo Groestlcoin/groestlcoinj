@@ -121,6 +121,7 @@ public class CoinTest {
         assertThat(new BigDecimal("0.00000001"), Matchers.comparesEqualTo(satoshiToBtc(SATOSHI.value)));
         assertThat(BigDecimal.ONE,  Matchers.comparesEqualTo(satoshiToBtc(COIN.value)));
         assertThat(new BigDecimal(50),  Matchers.comparesEqualTo(satoshiToBtc(FIFTY_COINS.value)));
+        assertThat(new BigDecimal(5),  Matchers.comparesEqualTo(satoshiToBtc(FIVE_COINS.value)));
         assertThat(new BigDecimal("92233720368.54775807"),  Matchers.comparesEqualTo(satoshiToBtc(Long.MAX_VALUE)));
     }
 
@@ -180,6 +181,7 @@ public class CoinTest {
         assertThat(new BigDecimal("0.00000001"), Matchers.comparesEqualTo(SATOSHI.toBtc()));
         assertThat(BigDecimal.ONE,  Matchers.comparesEqualTo(COIN.toBtc()));
         assertThat(new BigDecimal(50),  Matchers.comparesEqualTo(FIFTY_COINS.toBtc()));
+        assertThat(new BigDecimal(5),  Matchers.comparesEqualTo(FIVE_COINS.toBtc()));
         assertThat(new BigDecimal("92233720368.54775807"),  Matchers.comparesEqualTo(Coin.valueOf(Long.MAX_VALUE).toBtc()));
     }
 
