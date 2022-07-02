@@ -50,7 +50,7 @@ public class KeyChainGroupTest {
     private static final int INITIAL_KEYS = 4;
     private static final int LOOKAHEAD_SIZE = 5;
     private static final NetworkParameters MAINNET = MainNetParams.get();
-    private static final String XPUB = "xpub68KFnj3bqUx1s7mHejLDBPywCAKdJEu1b49uniEEn2WSbHmZ7xbLqFTjJbtx1LUcAt1DwhoqWHmo2s5WMJp6wi38CiF2hYD49qVViKVvAoi";
+    private static final String XPUB = "xpub68KFnj3bqUx1s7mHejLDBPywCAKdJEu1b49uniEEn2WSbHmZ7xbLqFTjJbtx1LUcAt1DwhoqWHmo2s5WMJp6wi38CiF2hYD49qVViHVxmLL";
     private static final byte[] ENTROPY = Sha256Hash.hash("don't use a string seed like this in real life".getBytes());
     private static final KeyCrypterScrypt KEY_CRYPTER = new KeyCrypterScrypt(2);
     private static final KeyParameter AES_KEY = KEY_CRYPTER.deriveKey("password");
@@ -520,18 +520,18 @@ public class KeyChainGroupTest {
         DeterministicKeyChain chain1 = DeterministicKeyChain.builder().seed(seed)
                 .accountPath(DeterministicKeyChain.ACCOUNT_ZERO_PATH).outputScriptType(Script.ScriptType.P2PKH).build();
         group = KeyChainGroup.builder(MAINNET).addChain(chain1).build();
-        assertEquals("1M5T5k9yKtGWRtWYMjQtGx3K2sshrABzCT", group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
+        assertEquals("FqFAXetLtNx3sVXfEqQMjTqdh39fRud7ct", group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
 
         final DeterministicKeyChain chain2 = DeterministicKeyChain.builder().seed(seed)
                 .accountPath(DeterministicKeyChain.ACCOUNT_ONE_PATH).outputScriptType(Script.ScriptType.P2PKH).build();
         group.addAndActivateHDChain(chain2);
-        assertEquals("1JLnjJEXcyByAaW6sqSxNvGiiSEWRhdvPb", group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
+        assertEquals("FnWWBCxuBTsWcBXDkwSRqS53NbWTyfAEGw", group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
 
         final DeterministicKeyChain chain3 = DeterministicKeyChain.builder().seed(seed)
                 .accountPath(DeterministicKeyChain.BIP44_ACCOUNT_ZERO_PATH).outputScriptType(Script.ScriptType.P2WPKH)
                 .build();
         group.addAndActivateHDChain(chain3);
-        assertEquals("bc1q5fa84aghxd6uzk5g2ywkppmzlut5d77vg8cd20",
+        assertEquals("grs1qdtwnzt45aahh0rduup6v8c0pesshlmsfzh9d6k",
                 group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
     }
 
@@ -646,7 +646,7 @@ public class KeyChainGroupTest {
     public void isWatching() {
         group = KeyChainGroup.builder(MAINNET)
                 .addChain(DeterministicKeyChain.builder().watch(DeterministicKey.deserializeB58(
-                        "xpub69bjfJ91ikC5ghsqsVDHNq2dRGaV2HHVx7Y9LXi27LN9BWWAXPTQr4u8U3wAtap8bLdHdkqPpAcZmhMS5SnrMQC4ccaoBccFhh315P4UYzo",
+                        "xpub69bjfJ91ikC5ghsqsVDHNq2dRGaV2HHVx7Y9LXi27LN9BWWAXPTQr4u8U3wAtap8bLdHdkqPpAcZmhMS5SnrMQC4ccaoBccFhh315PyrjhA",
                         MAINNET)).outputScriptType(Script.ScriptType.P2PKH).build())
                 .build();
         final ECKey watchingKey = ECKey.fromPublicOnly(new ECKey());
@@ -664,7 +664,7 @@ public class KeyChainGroupTest {
     public void isWatchingMixedKeys() {
         group = KeyChainGroup.builder(MAINNET)
                 .addChain(DeterministicKeyChain.builder().watch(DeterministicKey.deserializeB58(
-                        "xpub69bjfJ91ikC5ghsqsVDHNq2dRGaV2HHVx7Y9LXi27LN9BWWAXPTQr4u8U3wAtap8bLdHdkqPpAcZmhMS5SnrMQC4ccaoBccFhh315P4UYzo",
+                        "xpub69bjfJ91ikC5ghsqsVDHNq2dRGaV2HHVx7Y9LXi27LN9BWWAXPTQr4u8U3wAtap8bLdHdkqPpAcZmhMS5SnrMQC4ccaoBccFhh315PyrjhA",
                         MAINNET)).outputScriptType(Script.ScriptType.P2PKH).build())
                 .build();
         final ECKey key = ECKey.fromPrivate(BigInteger.TEN);
@@ -679,31 +679,31 @@ public class KeyChainGroupTest {
                         .accountPath(DeterministicKeyChain.ACCOUNT_ONE_PATH).build())
                 .build();
         assertEquals(Script.ScriptType.P2WPKH, group.getActiveKeyChain().getOutputScriptType());
-        assertEquals("bc1qhcurdec849thpjjp3e27atvya43gy2snrechd9",
+        assertEquals("grs1qhcurdec849thpjjp3e27atvya43gy2sn7gyk5y",
                 group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
-        assertEquals("bc1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2pxl9t2", group.currentAddress(KeyPurpose.CHANGE).toString());
+        assertEquals("grs1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2uhryjt", group.currentAddress(KeyPurpose.CHANGE).toString());
 
         // round-trip through protobuf
         group = KeyChainGroup.fromProtobufUnencrypted(MAINNET, group.serializeToProtobuf());
         assertEquals(Script.ScriptType.P2WPKH, group.getActiveKeyChain().getOutputScriptType());
-        assertEquals("bc1qhcurdec849thpjjp3e27atvya43gy2snrechd9",
+        assertEquals("grs1qhcurdec849thpjjp3e27atvya43gy2sn7gyk5y",
                 group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
-        assertEquals("bc1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2pxl9t2", group.currentAddress(KeyPurpose.CHANGE).toString());
+        assertEquals("grs1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2uhryjt", group.currentAddress(KeyPurpose.CHANGE).toString());
 
         // encryption
         group.encrypt(KEY_CRYPTER, AES_KEY);
         assertEquals(Script.ScriptType.P2WPKH, group.getActiveKeyChain().getOutputScriptType());
-        assertEquals("bc1qhcurdec849thpjjp3e27atvya43gy2snrechd9",
+        assertEquals("grs1qhcurdec849thpjjp3e27atvya43gy2sn7gyk5y",
                 group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
-        assertEquals("bc1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2pxl9t2", group.currentAddress(KeyPurpose.CHANGE).toString());
+        assertEquals("grs1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2uhryjt", group.currentAddress(KeyPurpose.CHANGE).toString());
 
         // round-trip encrypted again, then dectypt
         group = KeyChainGroup.fromProtobufEncrypted(MAINNET, group.serializeToProtobuf(), KEY_CRYPTER);
         group.decrypt(AES_KEY);
         assertEquals(Script.ScriptType.P2WPKH, group.getActiveKeyChain().getOutputScriptType());
-        assertEquals("bc1qhcurdec849thpjjp3e27atvya43gy2snrechd9",
+        assertEquals("grs1qhcurdec849thpjjp3e27atvya43gy2sn7gyk5y",
                 group.currentAddress(KeyPurpose.RECEIVE_FUNDS).toString());
-        assertEquals("bc1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2pxl9t2", group.currentAddress(KeyPurpose.CHANGE).toString());
+        assertEquals("grs1qw8sf3mwuwn74qnhj83gjg0cwkk78fun2uhryjt", group.currentAddress(KeyPurpose.CHANGE).toString());
     }
 
     @Test
