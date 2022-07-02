@@ -50,7 +50,7 @@ public abstract class AbstractBitcoinNetParams extends NetworkParameters {
      * Scheme part for Bitcoin URIs.
      */
     public static final String BITCOIN_SCHEME = "groestlcoin";
-    public static final int REWARD_HALVING_INTERVAL = 210000;
+    public static final int REWARD_HALVING_INTERVAL = 10080;
 
     private static final Logger log = LoggerFactory.getLogger(AbstractBitcoinNetParams.class);
 
@@ -107,7 +107,7 @@ public abstract class AbstractBitcoinNetParams extends NetworkParameters {
 		*/
         }
 
-        Coin nSubsidy = Coin.valueOf(512);
+        Coin nSubsidy = Coin.valueOf(512, 0);
 
         // Subsidy is reduced by 6% every 10080 blocks, which will occur approximately every 1 week
         int exponent=(height / 10080);

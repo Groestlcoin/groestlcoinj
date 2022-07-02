@@ -1106,7 +1106,7 @@ public class Block extends Message {
      * <a href="https://github.com/bitcoin/bips/blob/master/bip-0034.mediawiki">BIP34: Height in Coinbase</a>.
      */
     public boolean isBIP34() {
-        return version != 112 & version >= BLOCK_VERSION_BIP34;
+        return version != BLOCK_VERSION_GENESIS & version >= BLOCK_VERSION_BIP34;
     }
 
     /**
@@ -1114,7 +1114,7 @@ public class Block extends Message {
      * <a href="https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki">BIP66: Strict DER signatures</a>.
      */
     public boolean isBIP66() {
-        return version != 112 & version >= BLOCK_VERSION_BIP66;
+        return version != BLOCK_VERSION_GENESIS & version >= BLOCK_VERSION_BIP66;
     }
 
     /**
@@ -1122,7 +1122,7 @@ public class Block extends Message {
      * <a href="https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki">BIP65: OP_CHECKLOCKTIMEVERIFY</a>.
      */
     public boolean isBIP65() {
-        return version != 112 & version >= BLOCK_VERSION_BIP65;
+        return version != BLOCK_VERSION_GENESIS & version >= BLOCK_VERSION_BIP65;
     }
     public void setVersion(int version) {
         this.version = version;
