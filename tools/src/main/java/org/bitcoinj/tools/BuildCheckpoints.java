@@ -147,7 +147,7 @@ public class BuildCheckpoints implements Callable<Integer> {
 
         chain.addNewBestBlockListener(Threading.SAME_THREAD, block -> {
             int height = block.getHeight();
-            if (height % CoinDefinition.getIntervalCheckpoints() == 0 && block.getHeader().getTimeSeconds() <= timeAgo) {
+            if (height % NetworkParameters.INTERVAL == 0 && block.getHeader().getTimeSeconds() <= timeAgo) {
                 System.out.println(String.format("Checkpointing block %s at height %d, time %s",
                         block.getHeader().getHash(), block.getHeight(), Utils.dateTimeFormat(block.getHeader().getTime())));
                 checkpoints.put(height, block);

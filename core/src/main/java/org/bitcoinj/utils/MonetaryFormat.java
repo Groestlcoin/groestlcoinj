@@ -31,7 +31,6 @@ import java.util.Locale;
 import java.util.Objects;
 
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.CoinDefinition;
 import org.bitcoinj.core.Monetary;
 
 /**

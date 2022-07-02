@@ -19,13 +19,10 @@ package org.bitcoinj.params;
 
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.Utils;
-import org.bitcoinj.core.CoinDefinition;
 
 import org.bitcoinj.core.*;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
-
-import java.math.BigInteger;
 
 /**
  * Network parameters used by the bitcoinj unit tests (and potentially your own). This lets you solve a block using
@@ -45,7 +42,7 @@ public class UnitTestParams extends AbstractBitcoinNetParams {
         interval = 10;
         subsidyDecreaseBlockCount = 100;
 
-        port = CoinDefinition.TestPort;
+        port = 17777;
         packetMagic = 0x0b110907;
         dumpedPrivateKeyHeader = 239;
         addressHeader = 111;

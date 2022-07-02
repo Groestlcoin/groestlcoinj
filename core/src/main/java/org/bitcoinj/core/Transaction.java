@@ -115,7 +115,7 @@ public class Transaction extends ChildMessage {
     /**
      * If feePerKb is lower than this, Bitcoin Core will treat it as if there were no fee.
      */
-    public static final Coin REFERENCE_DEFAULT_MIN_TX_FEE = CoinDefinition.DEFAULT_MIN_TX_FEE; // 0.05 mBTC
+    public static final Coin REFERENCE_DEFAULT_MIN_TX_FEE = Coin.valueOf(10000);
 
     /**
      * If using this feePerKb, transactions will get confirmed within the next couple of blocks.
@@ -125,7 +125,7 @@ public class Transaction extends ChildMessage {
 
     /** @deprecated use {@link TransactionOutput#getMinNonDustValue()} */
     @Deprecated
-    public static final Coin MIN_NONDUST_OUTPUT = CoinDefinition.DUST_LIMIT;//Coin.valueOf(546); // satoshis
+    public static final Coin MIN_NONDUST_OUTPUT = Coin.valueOf(3000); // satoshis
 
     // These are bitcoin serialized.
     private long version;

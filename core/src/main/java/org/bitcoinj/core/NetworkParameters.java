@@ -42,11 +42,11 @@ import org.bitcoinj.utils.VersionTally;
  */
 public abstract class NetworkParameters {
     /** The string returned by getId() for the main, production network where people trade things. */
-    public static final String ID_MAINNET = CoinDefinition.ID_MAINNET; //"org.bitcoin.production";
+    public static final String ID_MAINNET = "org.groestlcoin.production";
     /** The string returned by getId() for the testnet. */
-    public static final String ID_TESTNET = CoinDefinition.ID_TESTNET; //"org.bitcoin.test";
+    public static final String ID_TESTNET = "org.groestlcoin.test";
     /** Unit test network. */
-    public static final String ID_UNITTESTNET = CoinDefinition.ID_UNITTESTNET; //"com.google.bitcoin.unittest";
+    public static final String ID_UNITTESTNET = "com.google.groestlcoin.unittest";
 
     public static final String ID_REGTEST = ID_TESTNET + "reg";
 
@@ -103,9 +103,9 @@ public abstract class NetworkParameters {
 
 
 
-    public static final int TARGET_TIMESPAN = CoinDefinition.TARGET_TIMESPAN;//14 * 24 * 60 * 60;  // 2 weeks per difficulty cycle, on average.
-    public static final int TARGET_SPACING = CoinDefinition.TARGET_SPACING;// 10 * 60;  // 10 minutes per block.
-    public static final int INTERVAL = CoinDefinition.INTERVAL;//TARGET_TIMESPAN / TARGET_SPACING;
+    public static final int TARGET_TIMESPAN = 1 * 24 * 60 * 60;  // 1 day per difficulty cycle, on average.
+    public static final int TARGET_SPACING = 60;  // 60 seconds per block.
+    public static final int INTERVAL = TARGET_TIMESPAN / TARGET_SPACING;
     
     /**
      * Blocks with a timestamp after this should enforce BIP 16, aka "Pay to script hash". This BIP changed the
@@ -117,13 +117,13 @@ public abstract class NetworkParameters {
     /**
      * The maximum number of coins to be generated
      */
-    public static final long MAX_COINS = CoinDefinition.MAX_COINS;
+    public static final long MAX_COINS = 105000000;
 
     /**
      * The maximum money to be generated
      */
 
-    public static final Coin MAX_MONEY = COIN.multiply(CoinDefinition.MAX_COINS);
+    public static final Coin MAX_MONEY = COIN.multiply(MAX_COINS);
 
 
     /**

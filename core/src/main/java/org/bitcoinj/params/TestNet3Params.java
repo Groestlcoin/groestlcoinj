@@ -72,7 +72,11 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
         majorityRejectBlockOutdated = TESTNET_MAJORITY_REJECT_BLOCK_OUTDATED;
         majorityWindow = TESTNET_MAJORITY_WINDOW;
 
-        dnsSeeds = CoinDefinition.testnetDnsSeeds;
+        dnsSeeds = new String[] {
+            "testnet-seed1.groestlcoin.org",
+            "testnet-seed2.groestlcoin.org",
+        };
+
         httpSeeds = null;
         addrSeeds = null;
 

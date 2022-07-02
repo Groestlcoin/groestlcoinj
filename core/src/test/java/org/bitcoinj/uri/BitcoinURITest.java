@@ -22,7 +22,6 @@ import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
-import org.bitcoinj.core.CoinDefinition;
 
 import static org.bitcoinj.core.Coin.*;
 import org.bitcoinj.core.NetworkParameters;
@@ -46,35 +45,35 @@ public class BitcoinURITest {
         Address goodAddress = LegacyAddress.fromBase58(MAINNET, MAINNET_GOOD_ADDRESS);
         
         // simple example
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello&message=AMessage", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", "AMessage"));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello&message=AMessage", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", "AMessage"));
         
         // example with spaces, ampersand and plus
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello%20World&message=Mess%20%26%20age%20%2B%20hope", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello World", "Mess & age + hope"));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello%20World&message=Mess%20%26%20age%20%2B%20hope", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello World", "Mess & age + hope"));
 
 
         // no amount, label present, message present
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?label=Hello&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, null, "Hello", "glory"));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?label=Hello&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, null, "Hello", "glory"));
         
         // amount present, no label, message present
 
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("0.1"), null, "glory"));
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("0.1"), "", "glory"));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("0.1"), null, "glory"));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=0.1&message=glory", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("0.1"), "", "glory"));
 
         // amount present, label present, no message
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", null));
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", ""));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", null));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=12.34&label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("12.34"), "Hello", ""));
               
         // amount present, no label, no message
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=1000", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("1000"), null, null));
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?amount=1000", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("1000"), "", ""));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=1000", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("1000"), null, null));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?amount=1000", BitcoinURI.convertToBitcoinURI(goodAddress, parseCoin("1000"), "", ""));
 
         
         // no amount, label present, no message
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, null, "Hello", null));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?label=Hello", BitcoinURI.convertToBitcoinURI(goodAddress, null, "Hello", null));
         
         // no amount, no label, message present
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?message=Agatha", BitcoinURI.convertToBitcoinURI(goodAddress, null, null, "Agatha"));
-        assertEquals(CoinDefinition.coinURIScheme + ":" + MAINNET_GOOD_ADDRESS + "?message=Agatha", BitcoinURI.convertToBitcoinURI(goodAddress, null, "", "Agatha"));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?message=Agatha", BitcoinURI.convertToBitcoinURI(goodAddress, null, null, "Agatha"));
+        assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS + "?message=Agatha", BitcoinURI.convertToBitcoinURI(goodAddress, null, "", "Agatha"));
       
         // no amount, no label, no message
         assertEquals("groestlcoin:" + MAINNET_GOOD_ADDRESS, BitcoinURI.convertToBitcoinURI(goodAddress, null, null, null));
@@ -385,7 +384,7 @@ public class BitcoinURITest {
     @Test
     public void brokenURIs() throws BitcoinURIParseException {
         // Check we can parse the incorrectly formatted URIs produced by blockchain.info and its iPhone app.
-        String str = CoinDefinition.coinURIScheme + "://"+"Fbvi6bnjhAjghrwk76S8auXu3qFkj4iMrf"+"?amount=0.01000000";
+        String str = "groestlcoin://"+"Fbvi6bnjhAjghrwk76S8auXu3qFkj4iMrf"+"?amount=0.01000000";
         BitcoinURI uri = new BitcoinURI(str);
 
         assertEquals("Fbvi6bnjhAjghrwk76S8auXu3qFkj4iMrf", uri.getAddress().toString());

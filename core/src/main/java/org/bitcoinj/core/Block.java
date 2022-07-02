@@ -68,7 +68,7 @@ public class Block extends Message {
      * upgrade everyone to change this, so Bitcoin can continue to grow. For now it exists as an anti-DoS measure to
      * avoid somebody creating a titanically huge but valid block and forcing everyone to download/store it forever.
      */
-    public static final int MAX_BLOCK_SIZE = CoinDefinition.MAX_BLOCK_SIZE; //1 * 1000 * 1000;
+    public static final int MAX_BLOCK_SIZE = 1 * 1000 * 1000;
     /**
      * A "sigop" is a signature verification operation. Because they're expensive we also impose a separate limit on
      * the number in a block to prevent somebody mining a huge block that has way more sigops than normal, so is very
@@ -89,7 +89,7 @@ public class Block extends Message {
     /** Height of the first block */
     public static final int BLOCK_HEIGHT_GENESIS = 0;
 
-    public static final long BLOCK_VERSION_GENESIS = CoinDefinition.genesisBlockVersion;
+    public static final long BLOCK_VERSION_GENESIS = 112;
     public static final long BLOCK_VERSION_GENESIS_TESTNET = 3;
 
     /** Block version introduced in BIP 34: Height in coinbase */

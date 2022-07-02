@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import org.bitcoinj.core.BitcoinSerializer;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.core.Coin;
-import org.bitcoinj.core.CoinDefinition;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
@@ -393,10 +392,10 @@ public abstract class AbstractBitcoinNetParams extends NetworkParameters {
         if (nBlockTimeCount != 0 && nBlockTimeCount2 != 0) {
             double SmartAverage = ((((double)nBlockTimeAverage)*0.7)+((nBlockTimeSum2 / nBlockTimeCount2)*0.3));
             if(SmartAverage < 1) SmartAverage = 1;
-            double Shift = CoinDefinition.TARGET_SPACING/SmartAverage;
+            double Shift = TARGET_SPACING/SmartAverage;
 
-            double fActualTimespan = (((double)CountBlocks*(double)CoinDefinition.TARGET_SPACING)/Shift);
-            double fTargetTimespan = ((double)CountBlocks*CoinDefinition.TARGET_SPACING);
+            double fActualTimespan = (((double)CountBlocks*(double)TARGET_SPACING)/Shift);
+            double fTargetTimespan = ((double)CountBlocks*TARGET_SPACING);
             if (fActualTimespan < fTargetTimespan/3)
                 fActualTimespan = fTargetTimespan/3;
             if (fActualTimespan > fTargetTimespan*3)

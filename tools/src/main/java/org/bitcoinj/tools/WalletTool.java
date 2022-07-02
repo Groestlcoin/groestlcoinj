@@ -818,7 +818,7 @@ public class WalletTool implements Callable<Integer> {
                 System.err.println("Error creating payment session " + e.getMessage());
                 System.exit(1);
             } catch (BitcoinURIParseException e) {
-                System.err.println("Invalid "+ CoinDefinition.coinName +" uri: " + e.getMessage());
+                System.err.println("Invalid  groestlcoin uri: " + e.getMessage());
                 System.exit(1);
             } catch (InterruptedException e) {
                 // Ignore.
