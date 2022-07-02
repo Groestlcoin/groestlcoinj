@@ -988,7 +988,7 @@ public class Block extends Message {
      */
     @VisibleForTesting
     public Block createNextBlock(Address to, long version, long time, int blockHeight) {
-        return createNextBlock(to, version, null, time, pubkeyForTesting, FIFTY_COINS, blockHeight);
+        return createNextBlock(to, version, null, time, pubkeyForTesting, ((AbstractBitcoinNetParams)params).getBlockInflation(blockHeight), blockHeight);
     }
 
     /**
@@ -1047,7 +1047,7 @@ public class Block extends Message {
 
     @VisibleForTesting
     public Block createNextBlock(@Nullable Address to, TransactionOutPoint prevOut) {
-        return createNextBlock(to, BLOCK_VERSION_GENESIS, prevOut, getTimeSeconds() + 5, pubkeyForTesting, FIFTY_COINS, BLOCK_HEIGHT_UNKNOWN);
+        return createNextBlock(to, BLOCK_VERSION_GENESIS, prevOut, getTimeSeconds() + 5, pubkeyForTesting, ((AbstractBitcoinNetParams)params).getBlockInflation(BLOCK_HEIGHT_UNKNOWN), BLOCK_HEIGHT_UNKNOWN);
     }
 
     @VisibleForTesting

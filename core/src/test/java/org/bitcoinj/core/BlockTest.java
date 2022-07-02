@@ -28,6 +28,7 @@ import org.bitcoinj.script.ScriptOpCodes;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.Wallet.BalanceType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -258,7 +259,7 @@ public class BlockTest {
         assertEquals("3d03076733467c45b08ec503a0c5d406647b073e1914d35b5111960ed625f3b7", witnessCommitment.toString());
     }
 
-    @Test
+    @Test @Ignore // get a block with a segwit transaction
     public void testBlock481829_witnessTransactions() throws Exception {
         Block block481829 = MAINNET.getDefaultSerializer()
                 .makeBlock(ByteStreams.toByteArray(getClass().getResourceAsStream("block481829.dat")));
