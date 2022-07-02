@@ -28,8 +28,6 @@ import java.util.Locale;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
-import org.bitcoinj.params.BitcoinParams;
-import org.bitcoinj.params.BitcoinTestNetParams;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.script.Script;
@@ -43,10 +41,6 @@ import com.google.common.base.MoreObjects;
 public class SegwitAddressTest {
     private static final MainNetParams MAINNET = MainNetParams.get();
     private static final TestNet3Params TESTNET = TestNet3Params.get();
-
-    private static final BitcoinParams BITCOIN = BitcoinParams.get();
-
-    private static final BitcoinTestNetParams BITCOIN_TESTNET = BitcoinTestNetParams.get();
 
     @Test
     public void equalsContract() {
