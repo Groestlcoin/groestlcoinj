@@ -150,7 +150,6 @@ publishing {
             credentials {
                 username = project.hasProperty('ossrhUsernameGroestlcoinj')?project.findProperty('ossrhUsernameGroestlcoinj'):''
                 password = project.hasProperty('ossrhPasswordGroestlcoinj')?project.findProperty('ossrhPasswordGroestlcoinj'):''
-                println(username + " /// " + password)
             }
         }
     }
