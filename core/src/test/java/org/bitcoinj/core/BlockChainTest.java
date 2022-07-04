@@ -160,7 +160,7 @@ public class BlockChainTest {
         assertEquals(chain.getChainHead().getHeader(), b3.cloneAsHeader());
     }
 
-    @Test @Ignore // need a faster hasher
+    @Test
     public void difficultyTransitions() throws Exception {
         // Add a bunch of blocks in a loop until we reach a difficulty transition point. The unit test params have an
         // artificially shortened period.
@@ -232,7 +232,7 @@ public class BlockChainTest {
      * Test that version 2 blocks are rejected once version 3 blocks are a super
      * majority.
      */
-    @Test @Ignore // need a faster hasher
+    @Test
     public void badBip66Version() throws Exception {
         testDeprecatedBlockVersion(Block.BLOCK_VERSION_BIP34, Block.BLOCK_VERSION_BIP66);
     }
@@ -241,7 +241,7 @@ public class BlockChainTest {
      * Test that version 3 blocks are rejected once version 4 blocks are a super
      * majority.
      */
-    @Test @Ignore // need a faster hasher
+    @Test
     public void badBip65Version() throws Exception {
         testDeprecatedBlockVersion(Block.BLOCK_VERSION_BIP66, Block.BLOCK_VERSION_BIP65);
     }
@@ -279,7 +279,7 @@ public class BlockChainTest {
         }
     }
 
-    @Test @Ignore // need a faster hasher
+    @Test
     public void duplicates() throws Exception {
         // Adding a block twice should not have any effect, in particular it should not send the block to the wallet.
         Block b1 = UNITTEST.getGenesisBlock().createNextBlock(coinbaseTo);
@@ -298,7 +298,7 @@ public class BlockChainTest {
         assertEquals(b3, block[0].getHeader());
     }
 
-    @Test @Ignore // need a faster hasher
+    @Test
     public void intraBlockDependencies() throws Exception {
         // Covers issue 166 in which transactions that depend on each other inside a block were not always being
         // considered relevant.
@@ -318,7 +318,7 @@ public class BlockChainTest {
         assertEquals(Coin.ZERO, wallet.getBalance());
     }
 
-    @Test @Ignore // need a faster hasher
+    @Test
     public void coinbaseTransactionAvailability() throws Exception {
         // Check that a coinbase transaction is only available to spend after NetworkParameters.getSpendableCoinbaseDepth() blocks.
 
@@ -339,7 +339,7 @@ public class BlockChainTest {
 
         // The coinbase tx is not yet available to spend.
         assertEquals(Coin.ZERO, wallet.getBalance());
-        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), PREMINE_COINS);
         assertTrue(!coinbaseTransaction.isMature());
 
         // Attempt to spend the coinbase - this should fail as the coinbase is not mature yet.
@@ -359,7 +359,7 @@ public class BlockChainTest {
 
             // Wallet still does not have the coinbase transaction available for spend.
             assertEquals(Coin.ZERO, wallet.getBalance());
-            assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+            assertEquals(wallet.getBalance(BalanceType.ESTIMATED), PREMINE_COINS);
 
             // The coinbase transaction is still not mature.
             assertTrue(!coinbaseTransaction.isMature());
@@ -378,12 +378,12 @@ public class BlockChainTest {
         chain.add(b3);
 
         // Wallet now has the coinbase transaction available for spend.
-        assertEquals(wallet.getBalance(), FIFTY_COINS);
-        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+        assertEquals(wallet.getBalance(), PREMINE_COINS);
+        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), PREMINE_COINS);
         assertTrue(coinbaseTransaction.isMature());
 
         // Create a spend with the coinbase BTC to the address in the second wallet - this should now succeed.
-        Transaction coinbaseSend2 = wallet.createSend(addressToSendTo, valueOf(49, 0));
+        Transaction coinbaseSend2 = wallet.createSend(addressToSendTo, valueOf(240639, 0));
         assertNotNull(coinbaseSend2);
 
         // Commit the coinbaseSpend to the first wallet and check the balances decrement.
@@ -398,8 +398,8 @@ public class BlockChainTest {
         assertEquals(wallet.getBalance(BalanceType.AVAILABLE), COIN);
 
         // Check the balances in the second wallet.
-        assertEquals(wallet2.getBalance(BalanceType.ESTIMATED), valueOf(49, 0));
-        assertEquals(wallet2.getBalance(BalanceType.AVAILABLE), valueOf(49, 0));
+        assertEquals(wallet2.getBalance(BalanceType.ESTIMATED), valueOf(240639, 0));
+        assertEquals(wallet2.getBalance(BalanceType.AVAILABLE), valueOf(240639, 0));
     }
 
     // Some blocks from the test net.
@@ -462,7 +462,7 @@ public class BlockChainTest {
         assertEquals(rate1, chain.getFalsePositiveRate(), 1e-4);
     }
 
-    @Test @Ignore // need a faster hasher
+    @Test
     public void rollbackBlockStore() throws Exception {
         // This test simulates an issue on Android, that causes the VM to crash while receiving a block, so that the
         // block store is persisted but the wallet is not.
