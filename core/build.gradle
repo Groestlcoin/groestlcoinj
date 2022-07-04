@@ -140,6 +140,19 @@ publishing {
             }
         }
     }
+    repositories {
+        maven {
+            // change URLs to point to your repos, e.g. http://my.org/repo
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username = project.hasProperty('ossrhUsernameGroestlcoinj')?project.findProperty('ossrhUsernameGroestlcoinj'):''
+                password = project.hasProperty('ossrhPasswordGroestlcoinj')?project.findProperty('ossrhPasswordGroestlcoinj'):''
+                println(username + " /// " + password)
+            }
+        }
+    }
 }
 
 
@@ -151,6 +164,11 @@ tasks.withType(Javadoc) {
 }
 
 signing {
-    required { gradle.taskGraph.hasTask("publish") }
-    sign configurations.archives
+    sign publishing.publications.mavenJava
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
 }
