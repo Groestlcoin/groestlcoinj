@@ -1,6 +1,6 @@
 [![Github Build Status](https://github.com/Groestlcoin/groestlcoinj/workflows/Java%20CI/badge.svg)](https://github.com/Groestlcoin/groestlcoinj/actions)
 
-[![Visit our IRC channel](https://kiwiirc.com/nextclient/irc.libera.chat/groestlcoin.png)](https://kiwiirc.com/nextclient/irc.libera.chat/groestlcoin)
+[![Visit our IRC channel](https://kiwiirc.com/buttons/irc.libera.chat/groestlcoin.png)](https://kiwiirc.com/nextclient/irc.libera.chat/groestlcoin)
 
 ### Welcome to groestlcoinj
 

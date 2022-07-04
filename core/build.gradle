@@ -76,7 +76,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
-publishToMavenLocal.dependsOn('pom')
+assemble.dependsOn('pom')
 task('pom', type: Copy) {
     dependsOn 'generatePomFileForMavenJavaPublication'
     from "${buildDir}/publications/mavenJava/pom-default.xml"
