@@ -32,6 +32,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
+import java.nio.Buffer;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.NotYetConnectedException;
@@ -45,6 +46,7 @@ import static com.google.common.base.Preconditions.*;
  */
 public abstract class PeerSocketHandler extends AbstractTimeoutHandler implements StreamConnection {
     private static final Logger log = LoggerFactory.getLogger(PeerSocketHandler.class);
+    private final Lock lock = Threading.lock(PeerSocketHandler.class);
 
     private final MessageSerializer serializer;
     protected PeerAddress peerAddress;
@@ -59,8 +61,6 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
     private byte[] largeReadBuffer;
     private int largeReadBufferPos;
     private BitcoinSerializer.BitcoinPacketHeader header;
-
-    private Lock lock = Threading.lock("PeerSocketHandler");
 
     public PeerSocketHandler(NetworkParameters params, InetSocketAddress remoteIp) {
         checkNotNull(params);
@@ -160,7 +160,7 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
                     // If we went through the whole buffer without a full message, we need to use the largeReadBuffer
                     if (firstMessage && buff.limit() == buff.capacity()) {
                         // ...so reposition the buffer to 0 and read the next message header
-                        buff.position(0);
+                        ((Buffer) buff).position(0);
                         try {
                             serializer.seekPastMagicBytes(buff);
                             header = serializer.deserializeHeader(buff);
@@ -179,7 +179,7 @@ public abstract class PeerSocketHandler extends AbstractTimeoutHandler implement
                     } else {
                         // Reposition the buffer to its original position, which saves us from skipping messages by
                         // seeking past part of the magic bytes before all of them are in the buffer
-                        buff.position(preSerializePosition);
+                        ((Buffer) buff).position(preSerializePosition);
                     }
                     return buff.position();
                 }

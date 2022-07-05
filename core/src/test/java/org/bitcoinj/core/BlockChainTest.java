@@ -20,6 +20,7 @@ package org.bitcoinj.core;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.params.UnitTestParams;
+import org.bitcoinj.script.Script;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.MemoryBlockStore;
@@ -29,6 +30,7 @@ import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.Wallet.BalanceType;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import org.junit.Ignore;
 import org.junit.rules.ExpectedException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -83,9 +85,9 @@ public class BlockChainTest {
         BriefLogFormatter.initVerbose();
         Utils.setMockClock(); // Use mock clock
         Context.propagate(new Context(TESTNET, 100, Coin.ZERO, false));
-        testNetChain = new BlockChain(TESTNET, new Wallet(TESTNET), new MemoryBlockStore(TESTNET));
+        testNetChain = new BlockChain(TESTNET, Wallet.createDeterministic(TESTNET, Script.ScriptType.P2PKH), new MemoryBlockStore(TESTNET));
         Context.propagate(new Context(UNITTEST, 100, Coin.ZERO, false));
-        wallet = new Wallet(UNITTEST) {
+        wallet = new Wallet(Context.get()) {
             @Override
             public void receiveFromBlock(Transaction tx, StoredBlock block, BlockChain.NewBlockType blockType,
                                          int relativityOffset) throws VerificationException {
@@ -163,7 +165,7 @@ public class BlockChainTest {
         // Add a bunch of blocks in a loop until we reach a difficulty transition point. The unit test params have an
         // artificially shortened period.
         Block prev = UNITTEST.getGenesisBlock();
-        Utils.setMockClock(Utils.currentTimeSeconds());
+        Utils.setMockClock();
         for (int height = 0; height < UNITTEST.getInterval() - 1; height++) {
             Block newBlock = prev.createNextBlock(coinbaseTo, 1, Utils.currentTimeSeconds(), height);
             assertTrue(chain.add(newBlock));
@@ -321,7 +323,7 @@ public class BlockChainTest {
         // Check that a coinbase transaction is only available to spend after NetworkParameters.getSpendableCoinbaseDepth() blocks.
 
         // Create a second wallet to receive the coinbase spend.
-        Wallet wallet2 = new Wallet(UNITTEST);
+        Wallet wallet2 = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         ECKey receiveKey = wallet2.freshReceiveKey();
         int height = 1;
         chain.addWallet(wallet2);
@@ -337,7 +339,7 @@ public class BlockChainTest {
 
         // The coinbase tx is not yet available to spend.
         assertEquals(Coin.ZERO, wallet.getBalance());
-        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), PREMINE_COINS);
         assertTrue(!coinbaseTransaction.isMature());
 
         // Attempt to spend the coinbase - this should fail as the coinbase is not mature yet.
@@ -357,7 +359,7 @@ public class BlockChainTest {
 
             // Wallet still does not have the coinbase transaction available for spend.
             assertEquals(Coin.ZERO, wallet.getBalance());
-            assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+            assertEquals(wallet.getBalance(BalanceType.ESTIMATED), PREMINE_COINS);
 
             // The coinbase transaction is still not mature.
             assertTrue(!coinbaseTransaction.isMature());
@@ -376,12 +378,12 @@ public class BlockChainTest {
         chain.add(b3);
 
         // Wallet now has the coinbase transaction available for spend.
-        assertEquals(wallet.getBalance(), FIFTY_COINS);
-        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), FIFTY_COINS);
+        assertEquals(wallet.getBalance(), PREMINE_COINS);
+        assertEquals(wallet.getBalance(BalanceType.ESTIMATED), PREMINE_COINS);
         assertTrue(coinbaseTransaction.isMature());
 
         // Create a spend with the coinbase BTC to the address in the second wallet - this should now succeed.
-        Transaction coinbaseSend2 = wallet.createSend(addressToSendTo, valueOf(49, 0));
+        Transaction coinbaseSend2 = wallet.createSend(addressToSendTo, valueOf(240639, 0));
         assertNotNull(coinbaseSend2);
 
         // Commit the coinbaseSpend to the first wallet and check the balances decrement.
@@ -396,8 +398,8 @@ public class BlockChainTest {
         assertEquals(wallet.getBalance(BalanceType.AVAILABLE), COIN);
 
         // Check the balances in the second wallet.
-        assertEquals(wallet2.getBalance(BalanceType.ESTIMATED), valueOf(49, 0));
-        assertEquals(wallet2.getBalance(BalanceType.AVAILABLE), valueOf(49, 0));
+        assertEquals(wallet2.getBalance(BalanceType.ESTIMATED), valueOf(240639, 0));
+        assertEquals(wallet2.getBalance(BalanceType.AVAILABLE), valueOf(240639, 0));
     }
 
     // Some blocks from the test net.

@@ -22,7 +22,16 @@ import static com.google.common.base.Preconditions.checkState;
 import java.math.BigInteger;
 import java.util.concurrent.TimeUnit;
 
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.BitcoinSerializer;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutput;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.core.VerificationException;
 import org.bitcoinj.utils.MonetaryFormat;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
@@ -40,30 +49,82 @@ public abstract class AbstractBitcoinNetParams extends NetworkParameters {
      * Scheme part for Bitcoin URIs.
      */
     public static final String BITCOIN_SCHEME = "groestlcoin";
-    public static final int REWARD_HALVING_INTERVAL = 210000;
+    public static final int REWARD_HALVING_INTERVAL = 10080;
 
     private static final Logger log = LoggerFactory.getLogger(AbstractBitcoinNetParams.class);
 
+    /** lazy-initialized by the first call to {@link NetworkParameters#getGenesisBlock()} */
+    protected Block genesisBlock;
+
     public AbstractBitcoinNetParams() {
         super();
+        interval = INTERVAL;
+        subsidyDecreaseBlockCount = REWARD_HALVING_INTERVAL;
     }
 
     /**
      * Checks if we are at a reward halving point.
-     * @param height The height of the previous stored block
+     * @param previousHeight The height of the previous stored block
      * @return If this is a reward halving point
      */
-    public final boolean isRewardHalvingPoint(final int height) {
-        return ((height + 1) % REWARD_HALVING_INTERVAL) == 0;
+    public final boolean isRewardHalvingPoint(final int previousHeight) {
+        return ((previousHeight + 1) % REWARD_HALVING_INTERVAL) == 0;
+    }
+
+    static private final Coin genesisBlockRewardCoin = Coin.valueOf(1,0);
+    static private final Coin minimumSubsidy = Coin.valueOf(5,0);
+    static private final Coin premineSubsidy = Coin.valueOf(240640,0);
+
+    /**
+     * <p>A utility method that calculates how much new Bitcoin would be created by the block at the given height.
+     * The inflation of Bitcoin is predictable and drops roughly every 4 years (210,000 blocks). At the dawn of
+     * the system it was 50 coins per block, in late 2012 it went to 25 coins per block, and so on. The size of
+     * a coinbase transaction is inflation plus fees.</p>
+     *
+     * <p>The half-life is controlled by {@link NetworkParameters#getSubsidyDecreaseBlockCount()}.</p>
+     *
+     * @param height the height of the block to calculate inflation for
+     */
+    public Coin getBlockInflation(int height) {
+        if (height == 0)
+        {
+            return genesisBlockRewardCoin;
+        }
+
+        if (height == 1)
+        {
+            return premineSubsidy;
+		/*
+		optimized standalone cpu miner 	60*512=30720
+		standalone gpu miner 			120*512=61440
+		first pool			 			70*512 =35840
+		block-explorer		 			60*512 =30720
+		mac wallet binary    			30*512 =15360
+		linux wallet binary  			30*512 =15360
+		web-site						100*512	=51200
+		total									=240640
+		*/
+        }
+
+        Coin nSubsidy = Coin.valueOf(512, 0);
+
+        // Subsidy is reduced by 6% every 10080 blocks, which will occur approximately every 1 week
+        int exponent=(height / 10080);
+        for(int i=0;i<exponent;i++){
+            nSubsidy=nSubsidy.multiply(47);
+            nSubsidy=nSubsidy.divide(50);
+        }
+        if(nSubsidy.compareTo(minimumSubsidy) < 0) {nSubsidy=minimumSubsidy;}
+        return nSubsidy;
     }
 
     /**
      * Checks if we are at a difficulty transition point.
-     * @param height The height of the previous stored block
+     * @param previousHeight The height of the previous stored block
      * @return If this is a difficulty transition point
      */
-    public final boolean isDifficultyTransitionPoint(final int height) {
-        return ((height + 1) % this.getInterval()) == 0;
+    public final boolean isDifficultyTransitionPoint(final int previousHeight) {
+        return ((previousHeight + 1) % this.getInterval()) == 0;
     }
 
     public void checkDifficultyTransitions_btc(final StoredBlock storedPrev, final Block nextBlock,
@@ -138,7 +199,9 @@ public abstract class AbstractBitcoinNetParams extends NetworkParameters {
         return MAX_MONEY;
     }
 
+    /** @deprecated use {@link TransactionOutput#getMinNonDustValue()} */
     @Override
+    @Deprecated
     public Coin getMinNonDustOutput() {
         return Transaction.MIN_NONDUST_OUTPUT;
     }
@@ -329,10 +392,10 @@ public abstract class AbstractBitcoinNetParams extends NetworkParameters {
         if (nBlockTimeCount != 0 && nBlockTimeCount2 != 0) {
             double SmartAverage = ((((double)nBlockTimeAverage)*0.7)+((nBlockTimeSum2 / nBlockTimeCount2)*0.3));
             if(SmartAverage < 1) SmartAverage = 1;
-            double Shift = CoinDefinition.TARGET_SPACING/SmartAverage;
+            double Shift = TARGET_SPACING/SmartAverage;
 
-            double fActualTimespan = (((double)CountBlocks*(double)CoinDefinition.TARGET_SPACING)/Shift);
-            double fTargetTimespan = ((double)CountBlocks*CoinDefinition.TARGET_SPACING);
+            double fActualTimespan = (((double)CountBlocks*(double)TARGET_SPACING)/Shift);
+            double fTargetTimespan = ((double)CountBlocks*TARGET_SPACING);
             if (fActualTimespan < fTargetTimespan/3)
                 fActualTimespan = fTargetTimespan/3;
             if (fActualTimespan > fTargetTimespan*3)

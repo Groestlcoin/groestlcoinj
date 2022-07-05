@@ -17,13 +17,12 @@
 
 package org.bitcoinj.params;
 
-import org.bitcoinj.core.CoinDefinition;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.Utils;
 
 import org.bitcoinj.core.*;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
-
-import java.math.BigInteger;
 
 /**
  * Network parameters used by the bitcoinj unit tests (and potentially your own). This lets you solve a block using
@@ -37,22 +36,19 @@ public class UnitTestParams extends AbstractBitcoinNetParams {
     public UnitTestParams() {
         super();
         id = ID_UNITTESTNET;
-        packetMagic = 0x0b110907;
-        addressHeader = CoinDefinition.testnetAddressHeader;
-        p2shHeader = CoinDefinition.testnetp2shHeader;
-        maxTarget = new BigInteger("7fffff0000000000000000000000000000000000000000000000000000000000", 16);
-        genesisBlock.setTime(System.currentTimeMillis() / 1000);
-        genesisBlock.setDifficultyTarget(Block.EASIEST_DIFFICULTY_TARGET);
-        //genesisBlock.solve();
-        port = CoinDefinition.TestPort;
-        interval = 10;
-        dumpedPrivateKeyHeader = 128 + CoinDefinition.testnetAddressHeader;
-        segwitAddressHrp = "tgrs";
+
         targetTimespan = 200000000;  // 6 years. Just a very big number.
-        spendableCoinbaseDepth = 5;
+        maxTarget = Utils.decodeCompactBits(Block.EASIEST_DIFFICULTY_TARGET);
+        interval = 10;
         subsidyDecreaseBlockCount = 100;
-        dnsSeeds = null;
-        addrSeeds = null;
+
+        port = 17777;
+        packetMagic = 0x0b110907;
+        dumpedPrivateKeyHeader = 239;
+        addressHeader = 111;
+        p2shHeader = 196;
+        segwitAddressHrp = "tgrs";
+        spendableCoinbaseDepth = 5;
         bip32HeaderP2PKHpub = 0x043587cf; // The 4 byte header that serializes in base58 to "tpub".
         bip32HeaderP2PKHpriv = 0x04358394; // The 4 byte header that serializes in base58 to "tprv"
         bip32HeaderP2WPKHpub = 0x045f1cf6; // The 4 byte header that serializes in base58 to "vpub".
@@ -61,6 +57,9 @@ public class UnitTestParams extends AbstractBitcoinNetParams {
         majorityEnforceBlockUpgrade = 3;
         majorityRejectBlockOutdated = 4;
         majorityWindow = 7;
+
+        dnsSeeds = null;
+        addrSeeds = null;
     }
 
     private static UnitTestParams instance;
@@ -72,8 +71,22 @@ public class UnitTestParams extends AbstractBitcoinNetParams {
     }
 
     @Override
+    public Block getGenesisBlock() {
+        synchronized (this) {
+            if (genesisBlock == null) {
+                genesisBlock = Block.createGenesis(this);
+                genesisBlock.setDifficultyTarget(Block.EASIEST_DIFFICULTY_TARGET);
+                genesisBlock.setVersion(3);
+                genesisBlock.setTime(Utils.currentTimeSeconds());
+                genesisBlock.solve();
+            }
+        }
+        return genesisBlock;
+    }
+
+    @Override
     public String getPaymentProtocolId() {
-        return "unittest";
+        return PAYMENT_PROTOCOL_ID_UNIT_TESTS;
     }
 
     @Override

@@ -86,7 +86,11 @@ public class TransactionOutputTest extends TestWithWallet {
 
     @Test
     public void getMinNonDustValue() throws Exception {
-        TransactionOutput payToAddressOutput = new TransactionOutput(UNITTEST, null, Coin.COIN, myAddress);
-        assertEquals(Transaction.MIN_NONDUST_OUTPUT, payToAddressOutput.getMinNonDustValue());
+        TransactionOutput p2pk = new TransactionOutput(UNITTEST, null, Coin.COIN, myKey);
+        assertEquals(Coin.valueOf(5760), p2pk.getMinNonDustValue());
+        TransactionOutput p2pkh = new TransactionOutput(UNITTEST, null, Coin.COIN, LegacyAddress.fromKey(UNITTEST, myKey));
+        assertEquals(Coin.valueOf(5460), p2pkh.getMinNonDustValue());
+        TransactionOutput p2wpkh = new TransactionOutput(UNITTEST, null, Coin.COIN, SegwitAddress.fromKey(UNITTEST, myKey));
+        assertEquals(Coin.valueOf(2940), p2wpkh.getMinNonDustValue());
     }
 }

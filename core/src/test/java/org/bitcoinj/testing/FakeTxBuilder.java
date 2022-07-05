@@ -275,9 +275,7 @@ public class FakeTxBuilder {
             blockStore.put(pair.storedBlock);
             blockStore.setChainHead(pair.storedBlock);
             return pair;
-        } catch (VerificationException e) {
-            throw new RuntimeException(e);  // Cannot happen.
-        } catch (BlockStoreException e) {
+        } catch (VerificationException | BlockStoreException e) {
             throw new RuntimeException(e);  // Cannot happen.
         }
     }
@@ -314,7 +312,7 @@ public class FakeTxBuilder {
 
     public static Block makeSolvedTestBlock(Block prev, Transaction... transactions) throws BlockStoreException {
         Address to = LegacyAddress.fromKey(prev.getParams(), new ECKey());
-        Block b = prev.createNextBlock(to);
+        Block b = prev.createNextBlock(to, Block.BLOCK_HEIGHT_UNKNOWN);
         // Coinbase tx already exists.
         for (Transaction tx : transactions) {
             b.addTransaction(tx);
@@ -324,7 +322,7 @@ public class FakeTxBuilder {
     }
 
     public static Block makeSolvedTestBlock(Block prev, Address to, Transaction... transactions) throws BlockStoreException {
-        Block b = prev.createNextBlock(to);
+        Block b = prev.createNextBlock(to, Block.BLOCK_HEIGHT_UNKNOWN);
         // Coinbase tx already exists.
         for (Transaction tx : transactions) {
             b.addTransaction(tx);

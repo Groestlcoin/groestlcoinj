@@ -28,6 +28,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import org.bitcoinj.core.Coin;
+import org.bitcoinj.core.NetworkParameters;
 
 public class MonetaryFormatTest {
 
@@ -185,6 +186,13 @@ public class MonetaryFormatTest {
         assertEquals("11223344556677.88", format(value, 6, 2));
     }
 
+    @Test
+    public void sat() throws Exception {
+        assertEquals("0", format(ZERO, 8, 0));
+        assertEquals("100000000", format(COIN, 8, 0));
+        assertEquals("10500000000000000", format(NetworkParameters.MAX_MONEY, 8, 0));
+    }
+
     private String format(Coin coin, int shift, int minDecimals, int... decimalGroups) {
         return NO_CODE.shift(shift).minDecimals(minDecimals).optionalDecimals(decimalGroups).format(coin).toString();
     }
@@ -211,9 +219,10 @@ public class MonetaryFormatTest {
 
     @Test
     public void standardCodes() throws Exception {
-        assertEquals("BTC 0.00", MonetaryFormat.BTC.format(Coin.ZERO).toString());
-        assertEquals("mBTC 0.00", MonetaryFormat.MBTC.format(Coin.ZERO).toString());
-        assertEquals("µBTC 0", MonetaryFormat.UBTC.format(Coin.ZERO).toString());
+        assertEquals("GRS 0.00", MonetaryFormat.BTC.format(Coin.ZERO).toString());
+        assertEquals("mGRS 0.00", MonetaryFormat.MBTC.format(Coin.ZERO).toString());
+        assertEquals("µGRS 0", MonetaryFormat.UBTC.format(Coin.ZERO).toString());
+        assertEquals("gro 0", MonetaryFormat.SAT.format(Coin.ZERO).toString());
     }
 
     @Test
@@ -223,7 +232,7 @@ public class MonetaryFormatTest {
 
     @Test
     public void customCode() throws Exception {
-        assertEquals("dBTC 0", MonetaryFormat.UBTC.code(1, "dBTC").shift(1).format(Coin.ZERO).toString());
+        assertEquals("dGRS 0", MonetaryFormat.UBTC.code(1, "dGRS").shift(1).format(Coin.ZERO).toString());
     }
 
     /**
@@ -233,18 +242,18 @@ public class MonetaryFormatTest {
     public void noCode() throws Exception {
         assertEquals("0", MonetaryFormat.UBTC.noCode().shift(0).format(Coin.ZERO).toString());
         // Ensure that inserting a code after codes are wiped, works
-        assertEquals("dBTC 0", MonetaryFormat.UBTC.noCode().code(1, "dBTC").shift(1).format(Coin.ZERO).toString());
+        assertEquals("dGRS 0", MonetaryFormat.UBTC.noCode().code(1, "dGRS").shift(1).format(Coin.ZERO).toString());
     }
 
     @Test
     public void codeOrientation() throws Exception {
-        assertEquals("BTC 0.00", MonetaryFormat.BTC.prefixCode().format(Coin.ZERO).toString());
-        assertEquals("0.00 BTC", MonetaryFormat.BTC.postfixCode().format(Coin.ZERO).toString());
+        assertEquals("GRS 0.00", MonetaryFormat.BTC.prefixCode().format(Coin.ZERO).toString());
+        assertEquals("0.00 GRS", MonetaryFormat.BTC.postfixCode().format(Coin.ZERO).toString());
     }
 
     @Test
     public void codeSeparator() throws Exception {
-        assertEquals("BTC@0.00", MonetaryFormat.BTC.codeSeparator('@').format(Coin.ZERO).toString());
+        assertEquals("GRS@0.00", MonetaryFormat.BTC.codeSeparator('@').format(Coin.ZERO).toString());
     }
 
     @Test(expected = NumberFormatException.class)
@@ -292,6 +301,11 @@ public class MonetaryFormatTest {
         assertEquals(Coin.MICROCOIN, MonetaryFormat.UBTC.positiveSign('+').parse("+1.0"));
         assertEquals(Coin.MICROCOIN.negate(), MonetaryFormat.UBTC.parse("-1"));
         assertEquals(Coin.MICROCOIN.negate(), MonetaryFormat.UBTC.parse("-1.0"));
+
+        assertEquals(Coin.SATOSHI, MonetaryFormat.SAT.parse("1"));
+        assertEquals(Coin.SATOSHI, MonetaryFormat.SAT.parse("01"));
+        assertEquals(Coin.SATOSHI, MonetaryFormat.SAT.positiveSign('+').parse("+1"));
+        assertEquals(Coin.SATOSHI.negate(), MonetaryFormat.SAT.parse("-1"));
 
         assertEquals(Coin.CENT, NO_CODE.withLocale(new Locale("hi", "IN")).parse(".०१")); // Devanagari
     }

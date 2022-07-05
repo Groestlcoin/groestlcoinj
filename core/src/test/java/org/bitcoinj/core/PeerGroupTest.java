@@ -141,14 +141,14 @@ public class PeerGroupTest extends TestWithPeerGroup {
         final AtomicBoolean result = new AtomicBoolean();
         peerGroup.addPeerDiscovery(new PeerDiscovery() {
             @Override
-            public InetSocketAddress[] getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
+            public List<InetSocketAddress> getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
                 if (!result.getAndSet(true)) {
                     // Pretend we are not connected to the internet.
                     throw new PeerDiscoveryException("test failure");
                 } else {
                     // Return a bogus address.
                     latch.countDown();
-                    return new InetSocketAddress[]{new InetSocketAddress("localhost", 1)};
+                    return Arrays.asList(new InetSocketAddress("localhost", 1));
                 }
             }
 
@@ -165,13 +165,13 @@ public class PeerGroupTest extends TestWithPeerGroup {
 
     // Utility method to create a PeerDiscovery with a certain number of addresses.
     private PeerDiscovery createPeerDiscovery(int nrOfAddressesWanted, int port) {
-        final InetSocketAddress[] addresses = new InetSocketAddress[nrOfAddressesWanted];
+        final List<InetSocketAddress> addresses = new ArrayList<>(nrOfAddressesWanted);
         for (int addressNr = 0; addressNr < nrOfAddressesWanted; addressNr++) {
             // make each address unique by using the counter to increment the port.
-            addresses[addressNr] = new InetSocketAddress("localhost", port + addressNr);
+            addresses.add(new InetSocketAddress("localhost", port + addressNr));
         }
         return new PeerDiscovery() {
-            public InetSocketAddress[] getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
+            public List<InetSocketAddress> getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
                 return addresses;
             }
             public void shutdown() {
@@ -243,7 +243,7 @@ public class PeerGroupTest extends TestWithPeerGroup {
         // Create a peer.
         InboundMessageQueuer p1 = connectPeer(1);
         
-        Wallet wallet2 = new Wallet(UNITTEST);
+        Wallet wallet2 = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         ECKey key2 = wallet2.freshReceiveKey();
         Address address2 = LegacyAddress.fromKey(UNITTEST, key2);
         
@@ -419,7 +419,7 @@ public class PeerGroupTest extends TestWithPeerGroup {
         final long now = Utils.currentTimeSeconds();
         peerGroup.start();
         assertTrue(peerGroup.getFastCatchupTimeSecs() > now - WEEK - 10000);
-        Wallet w2 = new Wallet(UNITTEST);
+        Wallet w2 = Wallet.createDeterministic(UNITTEST, Script.ScriptType.P2PKH);
         ECKey key1 = new ECKey();
         key1.setCreationTimeSeconds(now - 86400);  // One day ago.
         w2.importKey(key1);
@@ -557,8 +557,8 @@ public class PeerGroupTest extends TestWithPeerGroup {
         peerGroup.addPreMessageReceivedEventListener(preMessageReceivedListener);
         peerGroup.addPeerDiscovery(new PeerDiscovery() {
             @Override
-            public InetSocketAddress[] getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
-                return addresses.toArray(new InetSocketAddress[addresses.size()]);
+            public List<InetSocketAddress> getPeers(long services, long unused, TimeUnit unused2) throws PeerDiscoveryException {
+                return addresses;
             }
 
             @Override
@@ -567,7 +567,6 @@ public class PeerGroupTest extends TestWithPeerGroup {
         });
         peerGroup.setMaxConnections(3);
 
-        Utils.setMockSleep(true);
         blockJobs = true;
 
         jobBlocks.release(2);   // startup + first peer discovery
@@ -808,7 +807,7 @@ public class PeerGroupTest extends TestWithPeerGroup {
         assertNextMessageIs(p1, GetBlocksMessage.class);
 
         // Make some transactions and blocks that send money to the wallet thus using up all the keys.
-        List<Block> blocks = Lists.newArrayList();
+        List<Block> blocks = new ArrayList<>();
         Coin expectedBalance = Coin.ZERO;
         Block prev = blockStore.getChainHead().getHeader();
         for (ECKey key1 : keys) {

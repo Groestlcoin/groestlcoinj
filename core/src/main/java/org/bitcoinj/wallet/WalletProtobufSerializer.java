@@ -17,7 +17,6 @@
 
 package org.bitcoinj.wallet;
 
-import com.google.protobuf.Message;
 import org.bitcoinj.core.Coin;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.PeerAddress;
@@ -37,11 +36,9 @@ import org.bitcoinj.utils.ExchangeRate;
 import org.bitcoinj.utils.Fiat;
 import org.bitcoinj.wallet.Protos.Wallet.EncryptionType;
 
-import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedInputStream;
 import com.google.protobuf.CodedOutputStream;
-import com.google.protobuf.TextFormat;
 import com.google.protobuf.WireFormat;
 
 import org.slf4j.Logger;
@@ -157,15 +154,14 @@ public class WalletProtobufSerializer {
     }
 
     /**
-     * Returns the given wallet formatted as text. The text format is that used by protocol buffers and although it
-     * can also be parsed using {@link TextFormat#merge(CharSequence, Message.Builder)},
+     * Returns the given wallet formatted as text. The text format is that used by protocol buffers and
      * it is designed more for debugging than storage. It is not well specified and wallets are largely binary data
      * structures anyway, consisting as they do of keys (large random numbers) and {@link Transaction}s which also
      * mostly contain keys and hashes.
      */
     public String walletToText(Wallet wallet) {
         Protos.Wallet walletProto = walletToProto(wallet);
-        return TextFormat.printToString(walletProto);
+        return walletProto.toString();
     }
 
     /**
@@ -359,7 +355,7 @@ public class WalletProtobufSerializer {
                                         TransactionConfidence confidence,
                                         Protos.TransactionConfidence.Builder confidenceBuilder) {
         synchronized (confidence) {
-            confidenceBuilder.setType(Protos.TransactionConfidence.Type.valueOf(confidence.getConfidenceType().getValue()));
+            confidenceBuilder.setType(Protos.TransactionConfidence.Type.forNumber(confidence.getConfidenceType().getValue()));
             if (confidence.getConfidenceType() == ConfidenceType.BUILDING) {
                 confidenceBuilder.setAppearedAtHeight(confidence.getAppearedAtChainHeight());
                 confidenceBuilder.setDepth(confidence.getDepthInBlocks());
@@ -444,11 +440,7 @@ public class WalletProtobufSerializer {
             if (params == null)
                 throw new UnreadableWalletException("Unknown network parameters ID " + paramsID);
             return readWallet(params, extensions, walletProto, forceReset);
-        } catch (IOException e) {
-            throw new UnreadableWalletException("Could not parse input stream to protobuf", e);
-        } catch (IllegalStateException e) {
-            throw new UnreadableWalletException("Could not parse input stream to protobuf", e);
-        } catch (IllegalArgumentException e) {
+        } catch (IOException | IllegalArgumentException | IllegalStateException e) {
             throw new UnreadableWalletException("Could not parse input stream to protobuf", e);
         }
     }
@@ -503,7 +495,7 @@ public class WalletProtobufSerializer {
         }
         Wallet wallet = factory.create(params, keyChainGroup);
 
-        List<Script> scripts = Lists.newArrayList();
+        List<Script> scripts = new ArrayList<>();
         for (Protos.Script protoScript : walletProto.getWatchedScriptList()) {
             try {
                 Script script =
@@ -809,9 +801,8 @@ public class WalletProtobufSerializer {
                 throw new UnreadableWalletException("Peer IP address does not have the right length", e);
             }
             int port = proto.getPort();
-            int protocolVersion = params.getProtocolVersionNum(NetworkParameters.ProtocolVersion.CURRENT);
             BigInteger services = BigInteger.valueOf(proto.getServices());
-            PeerAddress address = new PeerAddress(params, ip, port, protocolVersion, services);
+            PeerAddress address = new PeerAddress(params, ip, port, services);
             confidence.markBroadcastBy(address);
         }
         if (confidenceProto.hasLastBroadcastedAt())

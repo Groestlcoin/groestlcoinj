@@ -17,6 +17,8 @@
 package org.bitcoinj.utils;
 
 import java.util.Stack;
+
+import org.bitcoinj.core.Block;
 import org.bitcoinj.core.NetworkParameters;
 import org.bitcoinj.core.StoredBlock;
 import org.bitcoinj.store.BlockStore;
@@ -80,8 +82,8 @@ public class VersionTally {
             return null;
         }
         int count = 0;
-        for (int versionIdx = 0; versionIdx < versionWindow.length; versionIdx++) {
-            if (versionWindow[versionIdx] >= version) {
+        for (long l : versionWindow) {
+            if (l >= version && l != Block.BLOCK_VERSION_GENESIS) {
                 count++;
             }
         }

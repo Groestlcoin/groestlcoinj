@@ -16,12 +16,11 @@
 
 package org.bitcoinj.utils;
 
-import org.bitcoinj.core.CoinDefinition;
 import org.bitcoinj.utils.BtcAutoFormat.Style;
 import static org.bitcoinj.utils.BtcAutoFormat.Style.*;
 
 import org.bitcoinj.core.Coin;
-import com.google.common.base.Objects;
+import java.util.Objects;
 import com.google.common.collect.ImmutableList;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -501,7 +500,7 @@ public abstract class BtcFormat extends Format {
      */
 
     /** The conventional international currency code for bitcoins: "BTC" */
-    private static final String COIN_CODE = CoinDefinition.coinTicker;//"BTC";
+    private static final String COIN_CODE = "GRS";
     /** The default currency symbols for bitcoins */
     private static final String COIN_SYMBOL = "฿";
     /** An alternative currency symbol to use in locales where the default symbol is used for the national currency. */
@@ -1589,7 +1588,7 @@ public abstract class BtcFormat extends Format {
      *  @see java.lang.Object#hashCode
      */
     @Override public int hashCode() {
-        return Objects.hashCode(pattern(), symbols(), minimumFractionDigits, decimalGroups);
+        return Objects.hash(pattern(), symbols(), minimumFractionDigits, decimalGroups);
     }
 
 }

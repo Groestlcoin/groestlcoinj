@@ -88,7 +88,7 @@ public class DnsDiscovery extends MultiplexingDiscovery {
         }
 
         @Override
-        public InetSocketAddress[] getPeers(long services, long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
+        public List<InetSocketAddress> getPeers(long services, long timeoutValue, TimeUnit timeoutUnit) throws PeerDiscoveryException {
             InetAddress[] response = null;
             if (services != 0) {
                 String hostnameWithServices = "x" + Long.toHexString(services) + "." + hostname;
@@ -111,9 +111,9 @@ public class DnsDiscovery extends MultiplexingDiscovery {
                 }
             }
 
-            InetSocketAddress[] result = new InetSocketAddress[response.length];
-            for (int i = 0; i < response.length; i++)
-                result[i] = new InetSocketAddress(response[i], params.getPort());
+            List<InetSocketAddress> result = new ArrayList<>(response.length);
+            for (InetAddress r : response)
+                result.add(new InetSocketAddress(r, params.getPort()));
             return result;
         }
 

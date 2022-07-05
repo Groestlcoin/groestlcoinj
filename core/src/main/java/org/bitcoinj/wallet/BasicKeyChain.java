@@ -26,7 +26,6 @@ import org.bitcoinj.utils.Threading;
 import org.bitcoinj.wallet.listeners.KeyChainEventListener;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -44,7 +43,7 @@ import static com.google.common.base.Preconditions.*;
  * it will automatically add one to itself if it's empty or if encryption is requested.
  */
 public class BasicKeyChain implements EncryptableKeyChain {
-    private final ReentrantLock lock = Threading.lock("BasicKeyChain");
+    private final ReentrantLock lock = Threading.lock(BasicKeyChain.class);
 
     // Maps used to let us quickly look up a key given data we find in transactions or the block chain.
     private final LinkedHashMap<ByteString, ECKey> hashToKeys;
@@ -321,9 +320,9 @@ public class BasicKeyChain implements EncryptableKeyChain {
             // which the leaf keys chain to an encrypted parent and rederive their private keys on the fly. In that
             // case the caller in DeterministicKeyChain will take care of setting the type.
             EncryptedData data = item.getEncryptedData();
-            proto.getEncryptedDataBuilder()
+            proto.setEncryptedData(proto.getEncryptedData().toBuilder()
                     .setEncryptedPrivateKey(ByteString.copyFrom(data.encryptedBytes))
-                    .setInitialisationVector(ByteString.copyFrom(data.initialisationVector));
+                    .setInitialisationVector(ByteString.copyFrom(data.initialisationVector)));
             // We don't allow mixing of encryption types at the moment.
             checkState(item.getEncryptionType() == Protos.Wallet.EncryptionType.ENCRYPTED_SCRYPT_AES);
             proto.setType(Protos.Key.Type.ENCRYPTED_SCRYPT_AES);
@@ -618,7 +617,7 @@ public class BasicKeyChain implements EncryptableKeyChain {
     public List<ECKey> findKeysBefore(long timeSecs) {
         lock.lock();
         try {
-            List<ECKey> results = Lists.newLinkedList();
+            List<ECKey> results = new LinkedList<>();
             for (ECKey key : hashToKeys.values()) {
                 final long keyTime = key.getCreationTimeSeconds();
                 if (keyTime < timeSecs) {
