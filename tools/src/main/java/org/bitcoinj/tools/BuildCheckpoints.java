@@ -66,6 +66,8 @@ public class BuildCheckpoints implements Callable<Integer> {
     @CommandLine.Option(names = "--help", usageHelp = true, description = "Displays program options.")
     private boolean help;
 
+    private int CHECKPOINT_INTERVAL = 2016;
+
     private static NetworkParameters params;
 
     public static void main(String[] args) throws Exception {
@@ -147,7 +149,7 @@ public class BuildCheckpoints implements Callable<Integer> {
 
         chain.addNewBestBlockListener(Threading.SAME_THREAD, block -> {
             int height = block.getHeight();
-            if (height % NetworkParameters.INTERVAL == 0 && block.getHeader().getTimeSeconds() <= timeAgo) {
+            if (height % CHECKPOINT_INTERVAL == 0 && block.getHeader().getTimeSeconds() <= timeAgo) {
                 System.out.println(String.format("Checkpointing block %s at height %d, time %s",
                         block.getHeader().getHash(), block.getHeight(), Utils.dateTimeFormat(block.getHeader().getTime())));
                 checkpoints.put(height, block);
