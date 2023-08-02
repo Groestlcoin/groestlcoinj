@@ -76,8 +76,8 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
             "testnet-seed1.groestlcoin.org",
             "testnet-seed2.groestlcoin.org",
         };
-
-        httpSeeds = null;
+        httpSeeds = new HttpDiscovery.Details[] {
+        };
         addrSeeds = null;
 
     }
