@@ -128,7 +128,6 @@ public abstract class NetworkParameters {
      */
     @Deprecated
     public static final long MAX_COINS = BitcoinNetwork.MAX_MONEY.longValue();
-    public static final long MAX_COINS = 105000000;
 
     /**
      * The maximum money to be generated
@@ -136,7 +135,6 @@ public abstract class NetworkParameters {
      */
     @Deprecated
     public static final Coin MAX_MONEY = BitcoinNetwork.MAX_MONEY;
-    public static final Coin MAX_MONEY = COIN.multiply(MAX_COINS);
 
 
     /**
