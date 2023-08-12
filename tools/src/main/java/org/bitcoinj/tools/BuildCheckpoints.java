@@ -124,7 +124,7 @@ public class BuildCheckpoints implements Callable<Integer> {
             peerGroup.setUserAgent("PeerMonitor", "1.0");
             peerGroup.setMaxConnections(20);
             peerGroup.addPeerDiscovery(new DnsDiscovery(net));
-            if (net == NetworkEnum.TEST) {
+            if (net == BitcoinNetwork.TESTNET || net == BitcoinNetwork.SIGNET) {
                 peerGroup.setMaxConnections(6);
             } else {
                 peerGroup.setMaxConnections(20);
