@@ -34,10 +34,10 @@ public class SigNetParams extends BitcoinNetworkParams {
     public static final int TESTNET_MAJORITY_WINDOW = 100;
     public static final int TESTNET_MAJORITY_REJECT_BLOCK_OUTDATED = 75;
     public static final int TESTNET_MAJORITY_ENFORCE_BLOCK_UPGRADE = 51;
-    private static final long GENESIS_DIFFICULTY = 0x1e0377ae;
-    private static final long GENESIS_TIME = 1598918400;
-    private static final long GENESIS_NONCE = 52613770;
-    private static final Sha256Hash GENESIS_HASH = Sha256Hash.wrap("00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6");
+    private static final long GENESIS_DIFFICULTY = 0x1e00ffff;
+    private static final long GENESIS_TIME = 1606082400;
+    private static final long GENESIS_NONCE = 14675970;
+    private static final Sha256Hash GENESIS_HASH = Sha256Hash.wrap("0000007fcaa2a27993c6cde9e7818c254357af517b876ceba2f23592bb14ab31");
 
     public SigNetParams() {
         super(BitcoinNetwork.SIGNET);
@@ -50,7 +50,7 @@ public class SigNetParams extends BitcoinNetworkParams {
         dumpedPrivateKeyHeader = 239;
         addressHeader = 0x6f;
         p2shHeader = 196;
-        segwitAddressHrp = "tb";
+        segwitAddressHrp = "tgrs";
         spendableCoinbaseDepth = 100;
         bip32HeaderP2PKHpub = 0x043587cf; // The 4 byte header that serializes in base58 to "tpub".
         bip32HeaderP2PKHpriv = 0x04358394; // The 4 byte header that serializes in base58 to "tprv"
@@ -62,7 +62,7 @@ public class SigNetParams extends BitcoinNetworkParams {
         majorityWindow = TESTNET_MAJORITY_WINDOW;
 
         dnsSeeds = new String[] {
-                "seed.signet.bitcoin.sprovoost.nl",
+                "198.199.105.43",
         };
         addrSeeds = null;
     }
@@ -80,6 +80,7 @@ public class SigNetParams extends BitcoinNetworkParams {
         synchronized (GENESIS_HASH) {
             if (genesisBlock == null) {
                 genesisBlock = Block.createGenesis();
+                genesisBlock.setVersion(3);
                 genesisBlock.setDifficultyTarget(GENESIS_DIFFICULTY);
                 genesisBlock.setTime(Instant.ofEpochSecond(GENESIS_TIME));
                 genesisBlock.setNonce(GENESIS_NONCE);
