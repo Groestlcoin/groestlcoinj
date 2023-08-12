@@ -19,6 +19,7 @@ package org.bitcoinj.crypto;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import com.hashengineering.crypto.Groestl;
 import org.bitcoinj.base.Network;
 import org.bitcoinj.base.ScriptType;
 import org.bitcoinj.base.internal.ByteUtils;
