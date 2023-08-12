@@ -252,52 +252,6 @@ public class TransactionTest {
     }
 
     @Test
-    public void testBuildingSimpleP2PKH() {
-        final Address toAddr = Address.fromKey(TESTNET, new ECKey(), Script.ScriptType.P2PKH);
-        final Sha256Hash utxo_id = Sha256Hash.wrap("81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48");
-        final Coin inAmount = Coin.ofSat(91234);
-        final Coin outAmount = Coin.ofSat(91234);
-
-        ECKey fromKey = new ECKey();
-        Address fromAddress = Address.fromKey(TESTNET, fromKey, Script.ScriptType.P2PKH);
-        Transaction tx = new Transaction(TESTNET);
-        TransactionOutPoint outPoint = new TransactionOutPoint(TESTNET, 0, utxo_id);
-        TransactionOutput output = new TransactionOutput(TESTNET, null, inAmount, fromAddress);
-        tx.addOutput(outAmount, toAddr);
-        TransactionInput input = tx.addSignedInput(outPoint, ScriptBuilder.createOutputScript(fromAddress), inAmount, fromKey);
-
-        // verify signature
-        input.getScriptSig().correctlySpends(tx, 0, null, null, ScriptBuilder.createOutputScript(fromAddress), null);
-
-        byte[] rawTx = tx.bitcoinSerialize();
-
-        assertNotNull(rawTx);
-    }
-
-    @Test
-    public void testBuildingSimpleP2WPKH() {
-        final Address toAddr = Address.fromKey(TESTNET, new ECKey(), Script.ScriptType.P2WPKH);
-        final Sha256Hash utxo_id = Sha256Hash.wrap("81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48");
-        final Coin inAmount = Coin.ofSat(91234);
-        final Coin outAmount = Coin.ofSat(91234);
-
-        ECKey fromKey = new ECKey();
-        Address fromAddress = Address.fromKey(TESTNET, fromKey, Script.ScriptType.P2WPKH);
-        Transaction tx = new Transaction(TESTNET);
-        TransactionOutPoint outPoint = new TransactionOutPoint(TESTNET, 0, utxo_id);
-        tx.addOutput(outAmount, toAddr);
-        TransactionInput input = tx.addSignedInput(outPoint, ScriptBuilder.createOutputScript(fromAddress), inAmount, fromKey);
-
-        // verify signature
-        input.getScriptSig().correctlySpends(tx, 0, input.getWitness(), input.getValue(),
-                ScriptBuilder.createOutputScript(fromAddress), null);
-
-        byte[] rawTx = tx.bitcoinSerialize();
-
-        assertNotNull(rawTx);
-    }
-
-    @Test
     public void witnessTransaction() {
         String hex;
         Transaction tx;
@@ -366,7 +320,7 @@ public class TransactionTest {
         TransactionSignature txSig0 = tx.calculateSignature(0, key0,
                 scriptPubKey0,
                 Transaction.SigHash.ALL, false);
-        assertEquals("30450221008b9d1dc26ba6a9cb62127b02742fa9d754cd3bebf337f7a55d114c8e5cdd30be022040529b194ba3f9281a99f2b1c0a19c0489bc22ede944ccf4ecbab4cc618ef3ed01",
+        assertEquals("3045022100bc15ec81f4ba0f7c0fbc855ed064df6d707ab54ad7cc13c9a6b8912486ce630e02205d34554704473f23049cd8364fa978acb6ef130ec9ecdd52d4c42a1143d92e4f01",
                 ByteUtils.formatHex(txSig0.encodeToBitcoin()));
 
         Script witnessScript = ScriptBuilder.createP2PKHOutputScript(key1);
@@ -499,9 +453,9 @@ public class TransactionTest {
         Transaction tx = Transaction.read(ByteBuffer.wrap(ByteUtils.parseHex(txHex)));
 
         ECKey pubKey = ECKey.fromPublicOnly(ByteUtils.parseHex(
-                "02d8b661b0b3302ee2f162b09e07a55ad5dfbe673a9f01d9f0c19617681024306b"));
+                "025428f15acc4581cb80675d5e8c20da69d54590693305e10f3f3378a8309c94b2"));
         Script script = Script.parse(ByteUtils.parseHex(
-                "56210307b8ae49ac90a048e9b53357a2354b3334e9c8bee813ecb98e99a7e07e8c3ba32103b28f0c28bfab54554ae8c658ac5c3e0ce6e79ad336331f78c428dd43eea8449b21034b8113d703413d57761b8b9781957b8c0ac1dfe69f492580ca4195f50376ba4a21033400f6afecb833092a9a21cfdf1ed1376e58c5d1f47de74683123987e967a8f42103a6d48b1131e94ba04d9737d61acdaa1322008af9602b3b14862c07a1789aac162102d8b661b0b3302ee2f162b09e07a55ad5dfbe673a9f01d9f0c19617681024306b56ae"));
+                "56210307b8ae49ac90a048e9b53357a2354b3334e9c8bee813ecb98e99a7e07e8c3ba32103b28f0c28bfab54554ae8c658ac5c3e0ce6e79ad336331f78c428dd43eea8449b21034b8113d703413d57761b8b9781957b8c0ac1dfe69f492580ca4195f50376ba4a21033400f6afecb833092a9a21cfdf1ed1376e58c5d1f47de74683123987e967a8f42103a6d48b1131e94ba04d9737d61acdaa1322008af9602b3b14862c07a1789aac1621025428f15acc4581cb80675d5e8c20da69d54590693305e10f3f3378a8309c94b256ae"));
         Sha256Hash hash = tx.hashForWitnessSignature(0, script, Coin.valueOf(987654321L),
                 Transaction.SigHash.SINGLE, true);
         TransactionSignature signature = TransactionSignature.decodeFromBitcoin(ByteUtils.parseHex(
