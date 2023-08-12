@@ -16,8 +16,8 @@
 
 package com.hashengineering.crypto;
 
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Utils;
+import org.bitcoinj.base.Sha256Hash;
+import org.bitcoinj.base.internal.ByteUtils;
 import com.google.common.io.ByteStreams;
 
 import java.io.File;
@@ -53,7 +53,7 @@ public class Sha512Hash implements Serializable, Comparable {
      */
     public Sha512Hash(String hexString) {
         checkArgument(hexString.length() == 64);
-        this.bytes = Utils.HEX.decode(hexString);
+        this.bytes = ByteUtils.parseHex(hexString);
     }
 
     /**
@@ -104,7 +104,7 @@ public class Sha512Hash implements Serializable, Comparable {
 
     @Override
     public String toString() {
-        return Utils.HEX.encode(bytes);
+        return ByteUtils.formatHex(bytes);
     }
 
     /**
