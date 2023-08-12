@@ -53,11 +53,11 @@ public class BitcoinURITest {
         assertEquals(BitcoinNetwork.MAINNET, uri1.getAddress().network());
         BitcoinURI uri2 = BitcoinURI.of("groestlcoin:" + MAINNET_GOOD_SEGWIT_ADDRESS);
         assertEquals(BitcoinNetwork.MAINNET, uri2.getAddress().network());
-        BitcoinURI uri3 = BitcoinURI.of("groestlcoin:mutDLVyes4YNWkL4j8g9oUsSUSTtnt13hP");
+        BitcoinURI uri3 = BitcoinURI.of("groestlcoin:mjNrWmeWu9nkqrXKFufVvtKya13E89fa8r");
         assertEquals(BitcoinNetwork.TESTNET, uri3.getAddress().network());
-        BitcoinURI uri4 = BitcoinURI.of("groestlcoin:tb1qn96rzewt04q0vtnh8lh0kelekkj2lpjh29lg6x");
+        BitcoinURI uri4 = BitcoinURI.of("groestlcoin:tgrs1qy2lg7uqh56q6trvl2eh6qmrlxpzysank09q2xs");
         assertEquals(BitcoinNetwork.TESTNET, uri4.getAddress().network());
-        BitcoinURI uri5 = BitcoinURI.of("GROESTLCOIN:TB1QN96RZEWT04Q0VTNH8LH0KELEKKJ2LPJH29LG6X");
+        BitcoinURI uri5 = BitcoinURI.of("GROESTLCOIN:TGRS1QY2LG7UQH56Q6TRVL2EH6QMRLXPZYSANK09Q2XS");
         assertEquals(BitcoinNetwork.TESTNET, uri5.getAddress().network());
     }
 
@@ -406,7 +406,7 @@ public class BitcoinURITest {
     @Test
     public void brokenURIs() throws BitcoinURIParseException {
         // Check we can parse the incorrectly formatted URIs produced by blockchain.info and its iPhone app.
-        String str = "bitcoin://Fbvi6bnjhAjghrwk76S8auXu3qFkj4iMrf?amount=0.01000000";
+        String str = "groestlcoin://Fbvi6bnjhAjghrwk76S8auXu3qFkj4iMrf?amount=0.01000000";
         BitcoinURI uri = BitcoinURI.of(str);
         assertEquals("Fbvi6bnjhAjghrwk76S8auXu3qFkj4iMrf", uri.getAddress().toString());
         assertEquals(CENT, uri.getAmount());
