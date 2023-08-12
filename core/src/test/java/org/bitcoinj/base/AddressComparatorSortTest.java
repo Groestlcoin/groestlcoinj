@@ -39,17 +39,17 @@ public class AddressComparatorSortTest {
      */
     private static final List<Address> correctlySortedAddresses = Stream.of(
                     // Main net, Legacy
-                    "1Dorian4RoXcnBv9hnQ4Y2C1an6NJ4UrjX",
-                    "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P",
+                    "FhyaAVWRzJDADnwGatPXzXzLEwNKszgS8Z",
+                    "FihWfpc6qScLBAW6Crx2Wz5ZKGPwbvZQQa",
                     // Main net, Segwit
-                    "bc1qgdjqv0av3q56jvd82tkdjpy7gdp9ut8tlqmgrpmv24sq90ecnvqqjwvw97",
-                    "bc1q5shngj24323nsrmxv99st02na6srekfctt30ch",
+                    "grs1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3qhrkhr4",
+                    "grs1qw508d6qejxtdg4y5r3zarvary0c5xw7k3k4sj5",
                     // Test net, Legacy
-                    "moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP",
-                    "mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv",
+                    "mpexoDuSkGGqvqrkrjiFng38QPkJRBy8FN",
+                    "n1nc7b7hMm8snE6uaCuLK1EXtdXshmasaP",
                     // Test net, Segwit
-                    "tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
-                    "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx"
+                    "tgrs1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3quvjfuq",
+                    "tgrs1qy2lg7uqh56q6trvl2eh6qmrlxpzysank09q2xs"
             ).map(addressParser::parseAddress)
             .collect(StreamUtils.toUnmodifiableList());
 
