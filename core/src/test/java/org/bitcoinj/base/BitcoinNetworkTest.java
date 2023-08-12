@@ -64,10 +64,10 @@ public class BitcoinNetworkTest {
 
     @Test
     public void fromIdString() {
-        assertEquals(BitcoinNetwork.MAINNET, BitcoinNetwork.fromIdString("org.bitcoin.production").get());
-        assertEquals(BitcoinNetwork.TESTNET, BitcoinNetwork.fromIdString("org.bitcoin.test").get());
-        assertEquals(BitcoinNetwork.SIGNET, BitcoinNetwork.fromIdString("org.bitcoin.signet").get());
-        assertEquals(BitcoinNetwork.REGTEST, BitcoinNetwork.fromIdString("org.bitcoin.regtest").get());
+        assertEquals(BitcoinNetwork.MAINNET, BitcoinNetwork.fromIdString("org.groestlcoin.production").get());
+        assertEquals(BitcoinNetwork.TESTNET, BitcoinNetwork.fromIdString("org.groestlcoin.test").get());
+        assertEquals(BitcoinNetwork.SIGNET, BitcoinNetwork.fromIdString("org.groestlcoin.signet").get());
+        assertEquals(BitcoinNetwork.REGTEST, BitcoinNetwork.fromIdString("org.groestlcoin.regtest").get());
     }
 
     @Test
