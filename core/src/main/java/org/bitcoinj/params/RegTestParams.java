@@ -46,7 +46,7 @@ public class RegTestParams extends BitcoinNetworkParams {
         subsidyDecreaseBlockCount = 150;
 
         port = 18888;
-        packetMagic = 0xfabfb5daL;
+        packetMagic = 0xfabfb5da;
         dumpedPrivateKeyHeader = 239;
         addressHeader = 111;
         p2shHeader = 196;
