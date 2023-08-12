@@ -30,7 +30,7 @@ import org.bitcoinj.store.BlockStoreException;
  * Mock Alt-net subclass of {@link NetworkParameters} for unit tests.
  */
 public class MockAltNetworkParams extends NetworkParameters {
-    public static final String MOCKNET_GOOD_ADDRESS = "LLxSnHLN2CYyzB5eWTR9K9rS9uWtbTQFb6";
+    public static final String MOCKNET_GOOD_ADDRESS = "LLxSnHLN2CYyzB5eWTR9K9rS9uWtcMKodB";
 
     public MockAltNetworkParams() {
         super(new MockAltNetwork());
