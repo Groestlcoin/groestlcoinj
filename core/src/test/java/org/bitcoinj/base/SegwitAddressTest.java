@@ -91,7 +91,7 @@ public class SegwitAddressTest {
 
     @Test
     public void equalityOfEquivalentNetworks() {
-        String bech32 = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx";
+        String bech32 = "tgrs1qe6lqwswx02mdejyschk9v89hhutkvy6w5t7rkdckshezptuys65q3ku4l4";
 
         SegwitAddress a = SegwitAddress.fromBech32(bech32, TESTNET);
         SegwitAddress b = SegwitAddress.fromBech32(bech32, SIGNET);
@@ -102,7 +102,7 @@ public class SegwitAddressTest {
 
     @Test
     public void example_p2wpkh_regtest() {
-        String bcrt1_bech32 = "bcrt1qspfueag7fvty7m8htuzare3xs898zvh30fttu2";
+        String bcrt1_bech32 = "grsrt1qspfueag7fvty7m8htuzare3xs898zvh3fr8z65";
 
         SegwitAddress address = SegwitAddress.fromBech32(bcrt1_bech32, REGTEST);
 
@@ -116,7 +116,7 @@ public class SegwitAddressTest {
 
     @Test
     public void example_p2wpkh_regtest_any_network() {
-        String bcrt1_bech32 = "bcrt1qspfueag7fvty7m8htuzare3xs898zvh30fttu2";
+        String bcrt1_bech32 = "grsrt1qspfueag7fvty7m8htuzare3xs898zvh3fr8z65";
 
         Address address = addressParser.parseAddress(bcrt1_bech32);
 
@@ -194,9 +194,6 @@ public class SegwitAddressTest {
             new AddressData("GRS1SW50QUA74JP", MAINNET, "6002751e", 16),
             new AddressData("grs1zw508d6qejxtdg4y5r3zarvaryv8vlr2l", MAINNET, "5210751e76e8199196d454941c45d1b3a323", 2),
             new AddressData("tgrs1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsess668a6", TESTNET,
-            //new AddressData("BC1SW50QGDZ25J", MAINNET, "6002751e", 16),
-            //new AddressData("bc1zw508d6qejxtdg4y5r3zarvaryvaxxpcs", MAINNET, "5210751e76e8199196d454941c45d1b3a323", 2),
-            //new AddressData("tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy", TESTNET,
                     "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433", 0),
             new AddressData("tgrs1pqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvses6d6w9x", TESTNET,
                     "5120000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433", 1),
@@ -261,7 +258,7 @@ public class SegwitAddressTest {
     public void fromBech32m_taprootTooShort() {
         // Taproot, valid bech32m encoding, checksum ok, padding ok, but no valid Segwit v1 program
         // (this program is 20 bytes long, but only 32 bytes program length are valid for Segwit v1/Taproot)
-        String taprootAddressWith20BytesWitnessProgram = "bc1pqypqzqspqgqsyqgzqypqzqspqgqsyqgzzezy58";
+        String taprootAddressWith20BytesWitnessProgram = "grs1pqypqzqspqgqsyqgzqypqzqspqgqsyqgzzezy58";
         SegwitAddress.fromBech32(taprootAddressWith20BytesWitnessProgram, MAINNET);
     }
 
@@ -269,7 +266,7 @@ public class SegwitAddressTest {
     public void fromBech32m_taprootTooLong() {
         // Taproot, valid bech32m encoding, checksum ok, padding ok, but no valid Segwit v1 program
         // (this program is 40 bytes long, but only 32 bytes program length are valid for Segwit v1/Taproot)
-        String taprootAddressWith40BytesWitnessProgram = "bc1p6t0pcqrq3mvedn884lgj9s2cm52xp9vtnlc89cv5x77f5l725rrdjhqrld6m6rza67j62a";
+        String taprootAddressWith40BytesWitnessProgram = "grs1p6t0pcqrq3mvedn884lgj9s2cm52xp9vtnlc89cv5x77f5l725rrdjhqrld6m6rza67j62a";
         SegwitAddress.fromBech32(taprootAddressWith40BytesWitnessProgram, MAINNET);
     }
 

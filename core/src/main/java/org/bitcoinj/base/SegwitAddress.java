@@ -65,9 +65,9 @@ public class SegwitAddress implements Address {
      *  <a href="https://github.com/bitcoin/bitcoin/issues/12314">Bitcoin Core Issue 1234 - discussion of {@code bcrt} HRP</a> for details.
      */
     public enum SegwitHrp {
-        BC(MAINNET),
-        TB(TESTNET, SIGNET),
-        BCRT(REGTEST);
+        GRS(MAINNET),
+        TGRS(TESTNET, SIGNET),
+        GRSRT(REGTEST);
 
         private final EnumSet<BitcoinNetwork> networks;
 
