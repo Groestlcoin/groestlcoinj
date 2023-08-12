@@ -18,6 +18,7 @@
 package org.bitcoinj.core;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.hashengineering.crypto.Groestl;
 import org.bitcoinj.base.Address;
 import org.bitcoinj.base.BitcoinNetwork;
 import org.bitcoinj.base.Coin;
@@ -157,7 +158,7 @@ public class Block extends BaseMessage {
         long difficultyTarget = ByteUtils.readUint32(payload);
         long nonce = ByteUtils.readUint32(payload);
         payload.reset(); // read again from the mark for the hash
-        Sha256Hash hash = Sha256Hash.wrapReversed(Sha256Hash.hashTwice(Buffers.readBytes(payload, HEADER_SIZE)));
+        Sha256Hash hash = Sha256Hash.wrapReversed(Groestl.digest(Buffers.readBytes(payload, HEADER_SIZE)));
         // transactions
         List<Transaction> transactions = payload.hasRemaining() ? // otherwise this message is just a header
                 readTransactions(payload) :
