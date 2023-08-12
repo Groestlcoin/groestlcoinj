@@ -17,15 +17,17 @@
 
 package org.bitcoinj.examples;
 
+import org.bitcoinj.base.BitcoinNetwork;
+import org.bitcoinj.base.Network;
+import org.bitcoinj.base.Sha256Hash;
 import org.bitcoinj.core.*;
-import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.MemoryBlockStore;
 import org.bitcoinj.utils.BriefLogFormatter;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import java.net.InetAddress;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * Downloads the given transaction and its dependencies from a peers memory pool then prints them out.
@@ -34,18 +36,19 @@ public class FetchTransactions {
     public static void main(String[] args) throws Exception {
         BriefLogFormatter.init();
         System.out.println("Connecting to node");
-        final NetworkParameters params = TestNet3Params.get();
+        final Network network = BitcoinNetwork.TESTNET;
+        final NetworkParameters params = NetworkParameters.of(network);
 
-        BlockStore blockStore = new MemoryBlockStore(params);
-        BlockChain chain = new BlockChain(params, blockStore);
-        PeerGroup peerGroup = new PeerGroup(params, chain);
+        BlockStore blockStore = new MemoryBlockStore(params.getGenesisBlock());
+        BlockChain chain = new BlockChain(network, blockStore);
+        PeerGroup peerGroup = new PeerGroup(network, chain);
         peerGroup.start();
-        peerGroup.addAddress(new PeerAddress(params, InetAddress.getLocalHost()));
+        peerGroup.addAddress(PeerAddress.localhost(params));
         peerGroup.waitForPeers(1).get();
         Peer peer = peerGroup.getConnectedPeers().get(0);
 
         Sha256Hash txHash = Sha256Hash.wrap(args[0]);
-        ListenableFuture<Transaction> future = peer.getPeerMempoolTransaction(txHash);
+        Future<Transaction> future = peer.getPeerMempoolTransaction(txHash);
         System.out.println("Waiting for node to send us the requested transaction: " + txHash);
         Transaction tx = future.get();
         System.out.println(tx);

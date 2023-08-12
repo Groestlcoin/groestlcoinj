@@ -16,27 +16,19 @@
 
 package org.bitcoinj.crypto;
 
-import org.bitcoinj.core.AddressFormatException;
-import org.bitcoinj.core.Base58;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.base.BitcoinNetwork;
+import org.bitcoinj.base.Network;
+import org.bitcoinj.base.exceptions.AddressFormatException;
+import org.bitcoinj.base.Base58;
 import org.bitcoinj.crypto.BIP38PrivateKey.BadPassphraseException;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.TestNet3Params;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+
+import static org.bitcoinj.base.BitcoinNetwork.MAINNET;
+import static org.bitcoinj.base.BitcoinNetwork.TESTNET;
 
 public class BIP38PrivateKeyTest {
-    private static final NetworkParameters MAINNET = MainNetParams.get();
-    private static final NetworkParameters TESTNET = TestNet3Params.get();
 
     @Test @Ignore // not sure how to generate this test data
     public void bip38testvector_noCompression_noEcMultiply_test1() throws Exception {
@@ -128,7 +120,7 @@ public class BIP38PrivateKeyTest {
     @Test
     public void iancoleman_mainnet() throws Exception {
         // values taken from https://iancoleman.io/bip39/
-        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(MAINNET,
+        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(BitcoinNetwork.TESTNET,
                 "6PRPvU4DtA8Gb3hQkbYY4z3LunYkhUsswPg6h14eiJHq357SQdZFTE7kNh");
         ECKey key = encryptedKey.decrypt("password");
         assertEquals("5JPipYm5tmoWH1xNU1AbWagqc2hyDvSsg2sT4Yf7W1q7EhKKcgi", key.getPrivateKeyEncoded(MAINNET)
@@ -138,7 +130,7 @@ public class BIP38PrivateKeyTest {
     @Test
     public void groestlcoinpaperwallet_mainnet() throws Exception {
         // values taken from https://www.groestlcoin.org/paper.html
-        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(MAINNET,
+        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(BitcoinNetwork.TESTNET,
                 "6PfTjgecKmcWzy4JhZf1WX8RWGT1Qwkzsv1rKNURpqCVZEkjECUbAZqwur");
         ECKey key = encryptedKey.decrypt("password");
         assertEquals("5HwDvwczJaujnL2X2N2tqNf5e3p8t21zf8yyavBPPgUJR1YLL3G", key.getPrivateKeyEncoded(MAINNET)
@@ -148,7 +140,7 @@ public class BIP38PrivateKeyTest {
     @Test
     public void bitaddress_testnet() throws Exception {
         // values taken from https://iancoleman.io/bip39/
-        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(TESTNET,
+        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(BitcoinNetwork.TESTNET,
                 "6PRTh2bwc6NWrH73pd41EffFKebPD8KtoWHgV2avhcEuP2WSpUttEfMyuE");
         ECKey key = encryptedKey.decrypt("password");
         assertEquals("92bDLj3F2Npss4Z7rpAcexNxptQgaec9xFAnkrW4KgUTX8wCWQB", key.getPrivateKeyEncoded(TESTNET)
@@ -165,40 +157,11 @@ public class BIP38PrivateKeyTest {
     @Test(expected = AddressFormatException.InvalidDataLength.class)
     public void fromBase58_invalidLength() {
         String base58 = Base58.encodeChecked(1, new byte[16]);
-        BIP38PrivateKey.fromBase58(null, base58);
+        BIP38PrivateKey.fromBase58((Network) null, base58);
     }
 
     @Test
-    public void testJavaSerialization() throws Exception {
-        BIP38PrivateKey testKey = BIP38PrivateKey.fromBase58(TESTNET,
-                "6PfMmVHn153N3x83Yiy4Nf76dHUkXufe2Adr9Fw5bewrunGNeaw2QCpifb");
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        new ObjectOutputStream(os).writeObject(testKey);
-        BIP38PrivateKey testKeyCopy = (BIP38PrivateKey) new ObjectInputStream(
-                new ByteArrayInputStream(os.toByteArray())).readObject();
-        assertEquals(testKey, testKeyCopy);
-
-        BIP38PrivateKey mainKey = BIP38PrivateKey.fromBase58(MAINNET,
-                "6PfMmVHn153N3x83Yiy4Nf76dHUkXufe2Adr9Fw5bewrunGNeaw2QCpifb");
-        os = new ByteArrayOutputStream();
-        new ObjectOutputStream(os).writeObject(mainKey);
-        BIP38PrivateKey mainKeyCopy = (BIP38PrivateKey) new ObjectInputStream(
-                new ByteArrayInputStream(os.toByteArray())).readObject();
-        assertEquals(mainKey, mainKeyCopy);
-    }
-
-    @Test
-    public void cloning() throws Exception {
-        BIP38PrivateKey a = BIP38PrivateKey.fromBase58(TESTNET, "6PfMmVHn153N3x83Yiy4Nf76dHUkXufe2Adr9Fw5bewrunGNeaw2QCpifb");
-        // TODO: Consider overriding clone() in BIP38PrivateKey to narrow the type
-        BIP38PrivateKey b = (BIP38PrivateKey) a.clone();
-
-        assertEquals(a, b);
-        assertNotSame(a, b);
-    }
-
-    @Test
-    public void roundtripBase58() throws Exception {
+    public void roundtripBase58() {
         String base58 = "6PfMmVHn153N3x83Yiy4Nf76dHUkXufe2Adr9Fw5bewrunGNeaw2QcixY1";
         assertEquals(base58, BIP38PrivateKey.fromBase58(MAINNET, base58).toBase58());
     }

@@ -17,22 +17,26 @@
 
 package org.bitcoinj.wallet;
 
-import org.bitcoinj.core.*;
+import org.bitcoinj.base.Coin;
+import org.bitcoinj.base.ScriptType;
+import org.bitcoinj.crypto.ECKey;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionConfidence;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptException;
 import org.bitcoinj.script.ScriptPattern;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
 
 /**
  * A coin selector that takes all coins assigned to keys created before the given timestamp.
- * Used as part of the implementation of {@link Wallet#setKeyRotationTime(java.util.Date)}.
+ * Used as part of the implementation of {@link Wallet#setKeyRotationTime(java.time.Instant)}.
  */
 public class KeyTimeCoinSelector implements CoinSelector {
     private static final Logger log = LoggerFactory.getLogger(KeyTimeCoinSelector.class);
@@ -40,21 +44,26 @@ public class KeyTimeCoinSelector implements CoinSelector {
     /** A number of inputs chosen to avoid hitting {@link Transaction#MAX_STANDARD_TX_SIZE} */
     public static final int MAX_SIMULTANEOUS_INPUTS = 600;
 
-    private final long unixTimeSeconds;
+    private final Instant time;
     private final Wallet wallet;
     private final boolean ignorePending;
 
-    public KeyTimeCoinSelector(Wallet wallet, long unixTimeSeconds, boolean ignorePending) {
-        this.unixTimeSeconds = unixTimeSeconds;
+    public KeyTimeCoinSelector(Wallet wallet, Instant time, boolean ignorePending) {
+        this.time = Objects.requireNonNull(time);
         this.wallet = wallet;
         this.ignorePending = ignorePending;
+    }
+
+    /** @deprecated use {@link #KeyTimeCoinSelector(Wallet, Instant, boolean)} */
+    @Deprecated
+    public KeyTimeCoinSelector(Wallet wallet, long timeSecs, boolean ignorePending) {
+        this(wallet, Instant.ofEpochSecond(timeSecs), ignorePending);
     }
 
     @Override
     public CoinSelection select(Coin target, List<TransactionOutput> candidates) {
         try {
             LinkedList<TransactionOutput> gathered = new LinkedList<>();
-            Coin valueGathered = Coin.ZERO;
             for (TransactionOutput output : candidates) {
                 if (ignorePending && !isConfirmed(output))
                     continue;
@@ -65,24 +74,23 @@ public class KeyTimeCoinSelector implements CoinSelector {
                 if (ScriptPattern.isP2PK(scriptPubKey)) {
                     controllingKey = wallet.findKeyFromPubKey(ScriptPattern.extractKeyFromP2PK(scriptPubKey));
                 } else if (ScriptPattern.isP2PKH(scriptPubKey)) {
-                    controllingKey = wallet.findKeyFromPubKeyHash(ScriptPattern.extractHashFromP2PKH(scriptPubKey), Script.ScriptType.P2PKH);
+                    controllingKey = wallet.findKeyFromPubKeyHash(ScriptPattern.extractHashFromP2PKH(scriptPubKey), ScriptType.P2PKH);
                 } else if (ScriptPattern.isP2WPKH(scriptPubKey)) {
-                    controllingKey = wallet.findKeyFromPubKeyHash(ScriptPattern.extractHashFromP2WH(scriptPubKey), Script.ScriptType.P2WPKH);
+                    controllingKey = wallet.findKeyFromPubKeyHash(ScriptPattern.extractHashFromP2WH(scriptPubKey), ScriptType.P2WPKH);
                 } else {
                     log.info("Skipping tx output {} because it's not of simple form.", output);
                     continue;
                 }
-                checkNotNull(controllingKey, "Coin selector given output as candidate for which we lack the key");
-                if (controllingKey.getCreationTimeSeconds() >= unixTimeSeconds) continue;
+                Objects.requireNonNull(controllingKey, "Coin selector given output as candidate for which we lack the key");
+                if (controllingKey.creationTime().orElse(Instant.EPOCH).compareTo(time) >= 0) continue;
                 // It's older than the cutoff time so select.
-                valueGathered = valueGathered.add(output.getValue());
                 gathered.push(output);
                 if (gathered.size() >= MAX_SIMULTANEOUS_INPUTS) {
                     log.warn("Reached {} inputs, going further would yield a tx that is too large, stopping here.", gathered.size());
                     break;
                 }
             }
-            return new CoinSelection(valueGathered, gathered);
+            return new CoinSelection(gathered);
         } catch (ScriptException e) {
             throw new RuntimeException(e);  // We should never have problems understanding scripts in our wallet.
         }

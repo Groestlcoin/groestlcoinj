@@ -16,7 +16,10 @@
 
 package org.bitcoinj.store;
 
-import org.bitcoinj.core.*;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.base.Sha256Hash;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.VerificationException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,16 +35,13 @@ public class MemoryBlockStore implements BlockStore {
         }
     };
     private StoredBlock chainHead;
-    private NetworkParameters params;
 
-    public MemoryBlockStore(NetworkParameters params) {
-        // Insert the genesis block.
+    public MemoryBlockStore(Block genesisBlock) {
         try {
-            Block genesisHeader = params.getGenesisBlock().cloneAsHeader();
+            Block genesisHeader = genesisBlock.cloneAsHeader();
             StoredBlock storedGenesis = new StoredBlock(genesisHeader, genesisHeader.getWork(), 0);
             put(storedGenesis);
             setChainHead(storedGenesis);
-            this.params = params;
         } catch (BlockStoreException | VerificationException e) {
             throw new RuntimeException(e);  // Cannot happen.
         }
@@ -75,10 +75,5 @@ public class MemoryBlockStore implements BlockStore {
     @Override
     public void close() {
         blockMap = null;
-    }
-
-    @Override
-    public NetworkParameters getParams() {
-        return params;
     }
 }

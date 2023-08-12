@@ -16,7 +16,6 @@
 
 package org.bitcoinj.crypto;
 
-import org.bitcoinj.core.ECKey;
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECFieldElement;
 import org.bouncycastle.math.ec.ECPoint;
@@ -24,8 +23,7 @@ import org.bouncycastle.math.ec.ECPoint;
 import javax.annotation.Nullable;
 import java.math.BigInteger;
 import java.util.Arrays;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
 
 /**
  * A wrapper around ECPoint that delays decoding of the point for as long as possible. This is useful because point
@@ -64,7 +62,7 @@ public class LazyECPoint {
      * @param compressed true if the represented public key is compressed
      */
     public LazyECPoint(ECPoint point, boolean compressed) {
-        this.point = checkNotNull(point).normalize();
+        this.point = Objects.requireNonNull(point).normalize();
         this.compressed = compressed;
         this.curve = null;
         this.bits = null;

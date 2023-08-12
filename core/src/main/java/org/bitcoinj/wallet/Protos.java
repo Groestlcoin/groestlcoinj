@@ -941,6 +941,7 @@ public final class Protos {
      * For the parents of keys being handed out, this is always less than the true number of children: the difference is
      * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
      * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+     *
      * If this field is missing it means we're not issuing subkeys of this key to users.
      * </pre>
      *
@@ -954,6 +955,7 @@ public final class Protos {
      * For the parents of keys being handed out, this is always less than the true number of children: the difference is
      * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
      * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+     *
      * If this field is missing it means we're not issuing subkeys of this key to users.
      * </pre>
      *
@@ -977,8 +979,8 @@ public final class Protos {
      * <pre>
      **
      * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-     * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-     * a single P2SH multisignature address
+     * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+     * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
      * </pre>
      *
      * <code>optional bool isFollowing = 5;</code>
@@ -989,8 +991,8 @@ public final class Protos {
      * <pre>
      **
      * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-     * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-     * a single P2SH multisignature address
+     * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+     * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
      * </pre>
      *
      * <code>optional bool isFollowing = 5;</code>
@@ -1000,8 +1002,9 @@ public final class Protos {
 
     /**
      * <pre>
-     * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-     * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+     * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+     * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+     * For regular single keychains it will always be 1.
      * </pre>
      *
      * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1010,8 +1013,9 @@ public final class Protos {
     boolean hasSigsRequiredToSpend();
     /**
      * <pre>
-     * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-     * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+     * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+     * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+     * For regular single keychains it will always be 1.
      * </pre>
      *
      * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1206,6 +1210,7 @@ public final class Protos {
      * For the parents of keys being handed out, this is always less than the true number of children: the difference is
      * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
      * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+     *
      * If this field is missing it means we're not issuing subkeys of this key to users.
      * </pre>
      *
@@ -1222,6 +1227,7 @@ public final class Protos {
      * For the parents of keys being handed out, this is always less than the true number of children: the difference is
      * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
      * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+     *
      * If this field is missing it means we're not issuing subkeys of this key to users.
      * </pre>
      *
@@ -1238,6 +1244,7 @@ public final class Protos {
      * For the parents of keys being handed out, this is always less than the true number of children: the difference is
      * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
      * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+     *
      * If this field is missing it means we're not issuing subkeys of this key to users.
      * </pre>
      *
@@ -1254,6 +1261,7 @@ public final class Protos {
      * For the parents of keys being handed out, this is always less than the true number of children: the difference is
      * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
      * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+     *
      * If this field is missing it means we're not issuing subkeys of this key to users.
      * </pre>
      *
@@ -1304,8 +1312,8 @@ public final class Protos {
      * <pre>
      **
      * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-     * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-     * a single P2SH multisignature address
+     * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+     * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
      * </pre>
      *
      * <code>optional bool isFollowing = 5;</code>
@@ -1319,8 +1327,8 @@ public final class Protos {
      * <pre>
      **
      * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-     * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-     * a single P2SH multisignature address
+     * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+     * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
      * </pre>
      *
      * <code>optional bool isFollowing = 5;</code>
@@ -1334,8 +1342,8 @@ public final class Protos {
      * <pre>
      **
      * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-     * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-     * a single P2SH multisignature address
+     * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+     * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
      * </pre>
      *
      * <code>optional bool isFollowing = 5;</code>
@@ -1349,8 +1357,8 @@ public final class Protos {
      * <pre>
      **
      * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-     * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-     * a single P2SH multisignature address
+     * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+     * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
      * </pre>
      *
      * <code>optional bool isFollowing = 5;</code>
@@ -1364,8 +1372,9 @@ public final class Protos {
     private int sigsRequiredToSpend_;
     /**
      * <pre>
-     * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-     * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+     * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+     * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+     * For regular single keychains it will always be 1.
      * </pre>
      *
      * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1377,8 +1386,9 @@ public final class Protos {
     }
     /**
      * <pre>
-     * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-     * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+     * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+     * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+     * For regular single keychains it will always be 1.
      * </pre>
      *
      * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1390,8 +1400,9 @@ public final class Protos {
     }
     /**
      * <pre>
-     * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-     * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+     * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+     * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+     * For regular single keychains it will always be 1.
      * </pre>
      *
      * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1403,8 +1414,9 @@ public final class Protos {
     }
     /**
      * <pre>
-     * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-     * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+     * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+     * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+     * For regular single keychains it will always be 1.
      * </pre>
      *
      * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1680,6 +1692,7 @@ public final class Protos {
        * For the parents of keys being handed out, this is always less than the true number of children: the difference is
        * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
        * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+       *
        * If this field is missing it means we're not issuing subkeys of this key to users.
        * </pre>
        *
@@ -1696,6 +1709,7 @@ public final class Protos {
        * For the parents of keys being handed out, this is always less than the true number of children: the difference is
        * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
        * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+       *
        * If this field is missing it means we're not issuing subkeys of this key to users.
        * </pre>
        *
@@ -1712,6 +1726,7 @@ public final class Protos {
        * For the parents of keys being handed out, this is always less than the true number of children: the difference is
        * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
        * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+       *
        * If this field is missing it means we're not issuing subkeys of this key to users.
        * </pre>
        *
@@ -1730,6 +1745,7 @@ public final class Protos {
        * For the parents of keys being handed out, this is always less than the true number of children: the difference is
        * called the lookahead zone. These keys are put into Bloom filters so we can spot transactions made by clones of
        * this wallet - for instance when restoring from backup or if the seed was shared between devices.
+       *
        * If this field is missing it means we're not issuing subkeys of this key to users.
        * </pre>
        *
@@ -1782,8 +1798,8 @@ public final class Protos {
        * <pre>
        **
        * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-       * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-       * a single P2SH multisignature address
+       * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+       * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
        * </pre>
        *
        * <code>optional bool isFollowing = 5;</code>
@@ -1797,8 +1813,8 @@ public final class Protos {
        * <pre>
        **
        * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-       * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-       * a single P2SH multisignature address
+       * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+       * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
        * </pre>
        *
        * <code>optional bool isFollowing = 5;</code>
@@ -1812,8 +1828,8 @@ public final class Protos {
        * <pre>
        **
        * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-       * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-       * a single P2SH multisignature address
+       * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+       * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
        * </pre>
        *
        * <code>optional bool isFollowing = 5;</code>
@@ -1829,8 +1845,8 @@ public final class Protos {
        * <pre>
        **
        * Flag indicating that this key is a root of a following chain. This chain is following the next non-following chain.
-       * Following/followed chains concept is used for married keychains, where the set of keys combined together to produce
-       * a single P2SH multisignature address
+       * Following/followed chains concept was used for married keychains, where the set of keys combined together to produce
+       * a single P2SH multisignature address. It is currently unused, but this flag is preserved.
        * </pre>
        *
        * <code>optional bool isFollowing = 5;</code>
@@ -1844,8 +1860,9 @@ public final class Protos {
 
       /**
        * <pre>
-       * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-       * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+       * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+       * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+       * For regular single keychains it will always be 1.
        * </pre>
        *
        * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1857,8 +1874,9 @@ public final class Protos {
       }
       /**
        * <pre>
-       * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-       * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+       * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+       * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+       * For regular single keychains it will always be 1.
        * </pre>
        *
        * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1870,8 +1888,9 @@ public final class Protos {
       }
       /**
        * <pre>
-       * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-       * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+       * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+       * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+       * For regular single keychains it will always be 1.
        * </pre>
        *
        * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -1885,8 +1904,9 @@ public final class Protos {
       }
       /**
        * <pre>
-       * Number of signatures required to spend. This field is needed only for married keychains to reconstruct KeyChain
-       * and represents the N value from N-of-M CHECKMULTISIG script. For regular single keychains it will always be 1.
+       * Number of signatures required to spend. This field was needed only for married keychains to reconstruct KeyChain
+       * and represents the N value from N-of-M CHECKMULTISIG script. It is currently unused, but this number is preserved.
+       * For regular single keychains it will always be 1.
        * </pre>
        *
        * <code>optional uint32 sigsRequiredToSpend = 6 [default = 1];</code>
@@ -2210,8 +2230,10 @@ public final class Protos {
    * <pre>
    **
    * A key used to control Bitcoin spending.
+   *
    * Either the private key, the public key or both may be present.  It is recommended that
    * if the private key is provided that the public key is provided too because deriving it is slow.
+   *
    * If only the public key is provided, the key can only be used to watch the blockchain and verify
    * transactions, and not for spending.
    * </pre>
@@ -3210,8 +3232,10 @@ public final class Protos {
      * <pre>
      **
      * A key used to control Bitcoin spending.
+     *
      * Either the private key, the public key or both may be present.  It is recommended that
      * if the private key is provided that the public key is provided too because deriving it is slow.
+     *
      * If only the public key is provided, the key can only be used to watch the blockchain and verify
      * transactions, and not for spending.
      * </pre>
@@ -6476,6 +6500,7 @@ public final class Protos {
    * <pre>
    **
    * A description of the confidence we have that a transaction cannot be reversed in the future.
+   *
    * Parsing should be lenient, since this could change for different applications yet we should
    * maintain backward compatibility.
    * </pre>
@@ -7259,6 +7284,7 @@ public final class Protos {
      * <pre>
      **
      * A description of the confidence we have that a transaction cannot be reversed in the future.
+     *
      * Parsing should be lenient, since this could change for different applications yet we should
      * maintain backward compatibility.
      * </pre>
@@ -12352,6 +12378,7 @@ public final class Protos {
      * <pre>
      **
      * The encryption type of the wallet.
+     *
      * The encryption type is UNENCRYPTED for wallets where the wallet does not support encryption - wallets prior to
      * encryption support are grandfathered in as this wallet type.
      * When a wallet is ENCRYPTED_SCRYPT_AES the keys are either encrypted with the wallet password or are unencrypted.

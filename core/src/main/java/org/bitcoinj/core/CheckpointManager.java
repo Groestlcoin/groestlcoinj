@@ -16,19 +16,20 @@
 
 package org.bitcoinj.core;
 
-import org.bitcoinj.store.BlockStore;
-import org.bitcoinj.store.BlockStoreException;
-import org.bitcoinj.store.FullPrunedBlockStore;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
-
+import org.bitcoinj.base.Sha256Hash;
+import org.bitcoinj.base.internal.TimeUtils;
+import org.bitcoinj.store.BlockStore;
+import org.bitcoinj.store.BlockStoreException;
+import org.bitcoinj.store.FullPrunedBlockStore;
 import org.bitcoinj.store.SPVBlockStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.*;
+import javax.annotation.Nullable;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
@@ -41,11 +42,15 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
-import static com.google.common.base.Preconditions.*;
+import static org.bitcoinj.base.internal.Preconditions.checkArgument;
+import static org.bitcoinj.base.internal.Preconditions.checkState;
 
 /**
  * <p>Vends hard-coded {@link StoredBlock}s for blocks throughout the chain. Checkpoints serve two purposes:</p>
@@ -78,7 +83,7 @@ public class CheckpointManager {
     private static final int MAX_SIGNATURES = 256;
 
     // Map of block header time (in seconds) to data.
-    protected final TreeMap<Long, StoredBlock> checkpoints = new TreeMap<>();
+    protected final TreeMap<Instant, StoredBlock> checkpoints = new TreeMap<>();
 
     protected final NetworkParameters params;
     protected final Sha256Hash dataHash;
@@ -86,16 +91,16 @@ public class CheckpointManager {
     public static final BaseEncoding BASE64 = BaseEncoding.base64().omitPadding();
 
     /** Loads the default checkpoints bundled with bitcoinj */
-    public CheckpointManager(Context context) throws IOException {
-        this(context.getParams(), null);
+    public CheckpointManager(NetworkParameters params) throws IOException {
+        this(params, null);
     }
 
     /** Loads the checkpoints from the given stream */
     public CheckpointManager(NetworkParameters params, @Nullable InputStream inputStream) throws IOException {
-        this.params = checkNotNull(params);
+        this.params = Objects.requireNonNull(params);
         if (inputStream == null)
             inputStream = openStream(params);
-        checkNotNull(inputStream);
+        Objects.requireNonNull(inputStream);
         inputStream = new BufferedInputStream(inputStream);
         inputStream.mark(1);
         int first = inputStream.read();
@@ -124,7 +129,9 @@ public class CheckpointManager {
             dis.readFully(header);
             if (!Arrays.equals(header, BINARY_MAGIC.getBytes(StandardCharsets.US_ASCII)))
                 throw new IOException("Header bytes did not match expected version");
-            int numSignatures = checkPositionIndex(dis.readInt(), MAX_SIGNATURES, "Num signatures out of range");
+            int numSignatures = dis.readInt();
+            checkState(numSignatures >= 0 && numSignatures < MAX_SIGNATURES, () ->
+                    "numSignatures out of range: " + numSignatures);
             for (int i = 0; i < numSignatures; i++) {
                 byte[] sig = new byte[65];
                 dis.readFully(sig);
@@ -138,13 +145,13 @@ public class CheckpointManager {
             for (int i = 0; i < numCheckpoints; i++) {
                 if (dis.read(buffer.array(), 0, size) < size)
                     throw new IOException("Incomplete read whilst loading checkpoints.");
-                StoredBlock block = StoredBlock.deserializeCompact(params, buffer);
+                StoredBlock block = StoredBlock.deserializeCompact(buffer);
                 ((Buffer) buffer).position(0);
-                checkpoints.put(block.getHeader().getTimeSeconds(), block);
+                checkpoints.put(block.getHeader().time(), block);
             }
             Sha256Hash dataHash = Sha256Hash.wrap(digest.digest());
             log.info("Read {} checkpoints up to time {}, hash is {}", checkpoints.size(),
-                    Utils.dateTimeFormat(checkpoints.lastEntry().getKey() * 1000), dataHash);
+                    TimeUtils.dateTimeFormat(checkpoints.lastEntry().getKey()), dataHash);
             return dataHash;
         } catch (ProtocolException e) {
             throw new IOException(e);
@@ -176,12 +183,12 @@ public class CheckpointManager {
                 ((Buffer) buffer).position(0);
                 buffer.put(bytes);
                 ((Buffer) buffer).position(0);
-                StoredBlock block = StoredBlock.deserializeCompact(params, buffer);
-                checkpoints.put(block.getHeader().getTimeSeconds(), block);
+                StoredBlock block = StoredBlock.deserializeCompact(buffer);
+                checkpoints.put(block.getHeader().time(), block);
             }
             HashCode hash = hasher.hash();
             log.info("Read {} checkpoints up to time {}, hash is {}", checkpoints.size(),
-                    Utils.dateTimeFormat(checkpoints.lastEntry().getKey() * 1000), hash);
+                    TimeUtils.dateTimeFormat(checkpoints.lastEntry().getKey()), hash);
             return Sha256Hash.wrap(hash.asBytes());
         }
     }
@@ -190,17 +197,23 @@ public class CheckpointManager {
      * Returns a {@link StoredBlock} representing the last checkpoint before the given time, for example, normally
      * you would want to know the checkpoint before the earliest wallet birthday.
      */
-    public StoredBlock getCheckpointBefore(long timeSecs) {
+    public StoredBlock getCheckpointBefore(Instant time) {
         try {
-            checkArgument(timeSecs > params.getGenesisBlock().getTimeSeconds());
+            checkArgument(time.isAfter(params.getGenesisBlock().time()));
             // This is thread safe because the map never changes after creation.
-            Map.Entry<Long, StoredBlock> entry = checkpoints.floorEntry(timeSecs);
+            Map.Entry<Instant, StoredBlock> entry = checkpoints.floorEntry(time);
             if (entry != null) return entry.getValue();
             Block genesis = params.getGenesisBlock().cloneAsHeader();
             return new StoredBlock(genesis, genesis.getWork(), 0);
         } catch (VerificationException e) {
             throw new RuntimeException(e);  // Cannot happen.
         }
+    }
+
+    /** @deprecated use {@link #getCheckpointBefore(Instant)} */
+    @Deprecated
+    public StoredBlock getCheckpointBefore(long timeSecs) {
+         return getCheckpointBefore(Instant.ofEpochSecond(timeSecs));
     }
 
     /** Returns the number of checkpoints that were loaded. */
@@ -218,25 +231,31 @@ public class CheckpointManager {
      * time, then inserts it into the store and sets that to be the chain head. Useful when you have just created
      * a new store from scratch and want to use configure it all in one go.</p>
      *
-     * <p>Note that timeSecs is adjusted backwards by a week to account for possible clock drift in the block headers.</p>
+     * <p>Note that time is adjusted backwards by a week to account for possible clock drift in the block headers.</p>
      */
-    public static void checkpoint(NetworkParameters params, InputStream checkpoints, BlockStore store, long timeSecs)
+    public static void checkpoint(NetworkParameters params, InputStream checkpoints, BlockStore store, Instant time)
             throws IOException, BlockStoreException {
+        Objects.requireNonNull(params);
+        Objects.requireNonNull(store);
+        checkArgument(!(store instanceof FullPrunedBlockStore), () ->
+                "you cannot use checkpointing with a full store");
 
-        checkNotNull(params);
-        checkNotNull(store);
-        checkArgument(!(store instanceof FullPrunedBlockStore), "You cannot use checkpointing with a full store.");
+        time = time.minus(7, ChronoUnit.DAYS);
 
-        timeSecs -= 60 * 60 * 24 * 7; // one week in seconds
-
-        checkArgument(timeSecs > 0);
-        log.info("Attempting to initialize a new block store with a checkpoint for time {} ({})", timeSecs,
-                Utils.dateTimeFormat(timeSecs * 1000));
+        log.info("Attempting to initialize a new block store with a checkpoint for time {} ({})", time.getEpochSecond(),
+                TimeUtils.dateTimeFormat(time));
 
         BufferedInputStream stream = new BufferedInputStream(checkpoints);
         CheckpointManager manager = new CheckpointManager(params, stream);
-        StoredBlock checkpoint = manager.getCheckpointBefore(timeSecs);
+        StoredBlock checkpoint = manager.getCheckpointBefore(time);
         store.put(checkpoint);
         store.setChainHead(checkpoint);
+    }
+
+    /** @deprecated use {@link #checkpoint(NetworkParameters, InputStream, BlockStore, Instant)} */
+    @Deprecated
+    public static void checkpoint(NetworkParameters params, InputStream checkpoints, BlockStore store, long timeSecs)
+            throws IOException, BlockStoreException {
+        checkpoint(params, checkpoints, store, Instant.ofEpochSecond(timeSecs));
     }
 }

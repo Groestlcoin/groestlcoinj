@@ -16,19 +16,33 @@
 
 package org.bitcoinj.store;
 
-import org.bitcoinj.core.*;
-import org.bitcoinj.utils.*;
-import org.slf4j.*;
+import org.bitcoinj.core.Block;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.ProtocolException;
+import org.bitcoinj.base.Sha256Hash;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.utils.Threading;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.annotation.*;
-import java.io.*;
-import java.nio.*;
-import java.nio.channels.*;
+import javax.annotation.Nullable;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.locks.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.locks.ReentrantLock;
 
-import static com.google.common.base.Preconditions.*;
+import static org.bitcoinj.base.internal.Preconditions.checkArgument;
+import static org.bitcoinj.base.internal.Preconditions.checkState;
 
 // TODO: Lose the mmap in this class. There are too many platform bugs that require odd workarounds.
 
@@ -98,8 +112,8 @@ public class SPVBlockStore implements BlockStore {
      * @throws BlockStoreException if something goes wrong
      */
     public SPVBlockStore(NetworkParameters params, File file, int capacity, boolean grow) throws BlockStoreException {
-        checkNotNull(file);
-        this.params = checkNotNull(params);
+        Objects.requireNonNull(file);
+        this.params = Objects.requireNonNull(params);
         checkArgument(capacity > 0);
         try {
             boolean exists = file.exists();
@@ -145,7 +159,7 @@ public class SPVBlockStore implements BlockStore {
                 if (!new String(header, StandardCharsets.US_ASCII).equals(HEADER_MAGIC))
                     throw new BlockStoreException("Header bytes do not equal " + HEADER_MAGIC);
             } else {
-                initNewStore(params);
+                initNewStore(params.getGenesisBlock());
             }
         } catch (Exception e) {
             try {
@@ -157,9 +171,9 @@ public class SPVBlockStore implements BlockStore {
         }
     }
 
-    private void initNewStore(NetworkParameters params) throws Exception {
+    private void initNewStore(Block genesisBlock) throws Exception {
         byte[] header;
-        header = HEADER_MAGIC.getBytes("US-ASCII");
+        header = HEADER_MAGIC.getBytes(StandardCharsets.US_ASCII);
         buffer.put(header);
         // Insert the genesis block.
         lock.lock();
@@ -168,14 +182,13 @@ public class SPVBlockStore implements BlockStore {
         } finally {
             lock.unlock();
         }
-        Block genesis = params.getGenesisBlock().cloneAsHeader();
-        StoredBlock storedGenesis = new StoredBlock(genesis, genesis.getWork(), 0);
+        StoredBlock storedGenesis = new StoredBlock(genesisBlock.cloneAsHeader(), genesisBlock.getWork(), 0);
         put(storedGenesis);
         setChainHead(storedGenesis);
     }
 
     /** Returns the size in bytes of the file that is used to store the chain with the current parameters. */
-    public static final int getFileSize(int capacity) {
+    public static int getFileSize(int capacity) {
         return RECORD_SIZE * capacity + FILE_PROLOGUE_BYTES /* extra kilobyte for stuff */;
     }
 
@@ -232,7 +245,7 @@ public class SPVBlockStore implements BlockStore {
                 buffer.get(scratch);
                 if (Arrays.equals(scratch, targetHashBytes)) {
                     // Found the target.
-                    StoredBlock storedBlock = StoredBlock.deserializeCompact(params, buffer);
+                    StoredBlock storedBlock = StoredBlock.deserializeCompact(buffer);
                     blockCache.put(hash, storedBlock);
                     return storedBlock;
                 }
@@ -295,11 +308,6 @@ public class SPVBlockStore implements BlockStore {
         }
     }
 
-    @Override
-    public NetworkParameters getParams() {
-        return params;
-    }
-
     protected static final int RECORD_SIZE = 32 /* hash */ + StoredBlock.COMPACT_SERIALIZED_SIZE;
 
     // File format:
@@ -317,7 +325,8 @@ public class SPVBlockStore implements BlockStore {
     /** Returns the offset from the file start where the latest block should be written (end of prev block). */
     private int getRingCursor(ByteBuffer buffer) {
         int c = buffer.getInt(4);
-        checkState(c >= FILE_PROLOGUE_BYTES, "Integer overflow");
+        checkState(c >= FILE_PROLOGUE_BYTES, () ->
+                "integer overflow");
         return c;
     }
 
@@ -340,7 +349,7 @@ public class SPVBlockStore implements BlockStore {
             }
             // Initialize store again
             ((Buffer) buffer).position(0);
-            initNewStore(params);
+            initNewStore(params.getGenesisBlock());
         } finally { lock.unlock(); }
     }
 }
