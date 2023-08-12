@@ -39,23 +39,23 @@ import static org.bitcoinj.base.Coin.COIN;
  */
 public enum BitcoinNetwork implements Network {
     /** The main Bitcoin network, known as {@code "mainnet"}, with {@code id} string {@code "org.bitcoin.production"}  */
-    MAINNET("org.bitcoin.production", "main", "prod"),
+    MAINNET("org.groestlcoin.production", "main", "prod"),
     /** The Bitcoin test network, known as {@code "testnet"}, with {@code id} string {@code "org.bitcoin.test"}  */
-    TESTNET("org.bitcoin.test", "test"),
+    TESTNET("org.groestlcoin.test", "test"),
     /** The Bitcoin signature-based test network, known as {@code "signet"}, with {@code id} string {@code "org.bitcoin.signet"}  */
-    SIGNET("org.bitcoin.signet", "sig"),
+    SIGNET("org.groestlcoin.signet", "sig"),
     /** A local Bitcoin regression test network, known as {@code "regtest"}, with {@code id} string {@code "org.bitcoin.regtest"}  */
-    REGTEST("org.bitcoin.regtest");
+    REGTEST("org.groestlcoin.regtest");
 
     /**
      * Scheme part for Bitcoin URIs.
      */
-    public static final String BITCOIN_SCHEME = "bitcoin";
+    public static final String BITCOIN_SCHEME = "groestlcoin";
 
     /**
      * The maximum number of coins to be generated
      */
-    private static final long MAX_COINS = 21_000_000;
+    private static final long MAX_COINS = 105_000_000;
 
     /**
      * The maximum money to be generated
