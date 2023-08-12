@@ -20,8 +20,7 @@ package org.bitcoinj.core;
 import com.google.common.annotations.VisibleForTesting;
 import com.hashengineering.crypto.Groestl;
 import org.bitcoinj.base.Address;
-import org.bitcoinj.base.BitcoinNetwork;
-import org.bitcoinj.base.Coin;
+\import org.bitcoinj.base.Coin;
 import org.bitcoinj.base.Sha256Hash;
 import org.bitcoinj.base.VarInt;
 import org.bitcoinj.base.internal.Buffers;
@@ -859,8 +858,7 @@ public class Block extends BaseMessage {
      */
     @VisibleForTesting
     public Block createNextBlock(@Nullable Address to, long version, Instant time, int height) {
-        return createNextBlock(to, version, null, time, pubkeyForTesting, FIFTY_COINS, height);
-        return createNextBlock(to, version, null, time, pubkeyForTesting, ((BitcoinNetwork)params).getBlockInflation(height), height);
+        return createNextBlock(to, version, null, time, pubkeyForTesting, BitcoinNetworkParams.getBlockInflation(height), height);
     }
 
     /**
@@ -886,7 +884,7 @@ public class Block extends BaseMessage {
         if (to != null) {
             // Add a transaction paying 50 coins to the "to" address.
             Transaction t = new Transaction();
-            t.addOutput(new TransactionOutput(t, ((BitcoinNetwork)params).getBlockInflation(height), to));
+            t.addOutput(new TransactionOutput(t, BitcoinNetworkParams.getBlockInflation(height), to));
             // The input does not really need to be a valid signature, as long as it has the right general form.
             TransactionInput input;
             if (prevOut == null) {
@@ -935,7 +933,7 @@ public class Block extends BaseMessage {
     @VisibleForTesting
     public Block createNextBlock(@Nullable Address to, TransactionOutPoint prevOut) {
         return createNextBlock(to, BLOCK_VERSION_GENESIS, prevOut, time().plusSeconds(5), pubkeyForTesting,
-                ((BitcoinNetwork)params).getBlockInflation(BLOCK_HEIGHT_UNKNOWN), BLOCK_HEIGHT_UNKNOWN);
+                BitcoinNetworkParams.getBlockInflation(BLOCK_HEIGHT_UNKNOWN), BLOCK_HEIGHT_UNKNOWN);
     }
 
     /**
@@ -959,7 +957,7 @@ public class Block extends BaseMessage {
      */
     @VisibleForTesting
     public Block createNextBlock(@Nullable Address to) {
-        return createNextBlock(to, Block.BLOCK_HEIGHT_UNKNOWN);
+        return createNextBlock(to, BitcoinNetworkParams.getBlockInflation(Block.BLOCK_HEIGHT_UNKNOWN));
     }
 
     /**
@@ -989,7 +987,7 @@ public class Block extends BaseMessage {
     @VisibleForTesting
     Block createNextBlockWithCoinbase(long version, byte[] pubKey, int height) {
         return createNextBlock(null, version, (TransactionOutPoint) null, TimeUtils.currentTime(), pubKey,
-                ((BitcoinNetwork)params).getBlockInflation(BLOCK_HEIGHT_UNKNOWN), height);
+                BitcoinNetworkParams.getBlockInflation(height), height);
     }
 
     /**

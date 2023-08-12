@@ -151,7 +151,7 @@ public abstract class BitcoinNetworkParams extends NetworkParameters {
      * @param height the height of the block to calculate inflation for
      * @return block reward (inflation) for specified block
      */
-    public Coin getBlockInflation(int height) {
+    public static Coin getBlockInflation(int height) {
         if (height == 0)
         {
             return genesisBlockRewardCoin;

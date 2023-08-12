@@ -224,7 +224,7 @@ public abstract class AbstractFullPrunedBlockChainTest {
         
         // Create a chain longer than UNDOABLE_BLOCKS_STORED
         for (int i = 0; i < UNDOABLE_BLOCKS_STORED; i++) {
-            rollingBlock = rollingBlock.createNextBlock(null, height + i);
+            rollingBlock = rollingBlock.createNextBlock(null);
             chain.add(rollingBlock);
         }
         // Try to get the garbage collector to run
