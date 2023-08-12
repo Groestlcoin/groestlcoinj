@@ -30,6 +30,7 @@ import static org.bitcoinj.base.BitcoinNetwork.MAX_MONEY;
 import static org.bitcoinj.base.Coin.CENT;
 import static org.bitcoinj.base.Coin.COIN;
 import static org.bitcoinj.base.Coin.FIFTY_COINS;
+import static org.bitcoinj.base.Coin.FIVE_COINS;
 import static org.bitcoinj.base.Coin.NEGATIVE_SATOSHI;
 import static org.bitcoinj.base.Coin.SATOSHI;
 import static org.bitcoinj.base.Coin.ZERO;
