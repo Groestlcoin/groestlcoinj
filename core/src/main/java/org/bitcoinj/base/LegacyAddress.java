@@ -295,7 +295,7 @@ public class LegacyAddress implements Address {
      * Address header of legacy P2PKH addresses for standard Bitcoin networks.
      */
     public enum AddressHeader {
-        X0(0, MAINNET),
+        X36(36, MAINNET),
         X111(111, TESTNET, REGTEST),
         X6F(0x6f, SIGNET);
 
