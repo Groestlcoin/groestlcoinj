@@ -220,10 +220,10 @@ public class MonetaryFormatTest {
 
     @Test
     public void standardCodes() {
-        assertEquals("BTC 0.00", MonetaryFormat.BTC.format(Coin.ZERO).toString());
-        assertEquals("mBTC 0.00", MonetaryFormat.MBTC.format(Coin.ZERO).toString());
-        assertEquals("µBTC 0", MonetaryFormat.UBTC.format(Coin.ZERO).toString());
-        assertEquals("sat 0", MonetaryFormat.SAT.format(Coin.ZERO).toString());
+        assertEquals("GRS 0.00", MonetaryFormat.BTC.format(Coin.ZERO).toString());
+        assertEquals("mGRS 0.00", MonetaryFormat.MBTC.format(Coin.ZERO).toString());
+        assertEquals("µGRS 0", MonetaryFormat.UBTC.format(Coin.ZERO).toString());
+        assertEquals("gro 0", MonetaryFormat.SAT.format(Coin.ZERO).toString());
     }
 
     @Test
@@ -248,13 +248,13 @@ public class MonetaryFormatTest {
 
     @Test
     public void codeOrientation() {
-        assertEquals("BTC 0.00", MonetaryFormat.BTC.prefixCode().format(Coin.ZERO).toString());
-        assertEquals("0.00 BTC", MonetaryFormat.BTC.postfixCode().format(Coin.ZERO).toString());
+        assertEquals("GRS 0.00", MonetaryFormat.BTC.prefixCode().format(Coin.ZERO).toString());
+        assertEquals("0.00 GRS", MonetaryFormat.BTC.postfixCode().format(Coin.ZERO).toString());
     }
 
     @Test
     public void codeSeparator() {
-        assertEquals("BTC@0.00", MonetaryFormat.BTC.codeSeparator('@').format(Coin.ZERO).toString());
+        assertEquals("GRS@0.00", MonetaryFormat.BTC.codeSeparator('@').format(Coin.ZERO).toString());
     }
 
     @Test(expected = NumberFormatException.class)
