@@ -528,9 +528,9 @@ public class DeterministicKeyChainTest {
 
         DeterministicKey watchingKey = segwitChain.getWatchingKey();
         final String xpub58 = watchingKey.serializePubB58(MAINNET);
-        assertEquals("zpub6nywkzAGfYS2siEfJtm9mo3hwDk8eUtL8EJ31XeWSd7C7x7esnfMMWmWiSs8od5jRt11arTjKLLbxCXuWNSXcxpi9PMSAphMt2ZE2fF6ogd", xpub58);
+        assertEquals("xpub69KR9epSNBM5B7rReBBuMcrhbHTEmEuLJ1FbSjrjgcMS1kVCNULE7PTEg2wxoomtcbmQ5uGcQ1dWBdJn4ycW2VTWQhxb114PLaRwFYiYFpE", xpub58);
         final String zpub58 = watchingKey.serializePubB58(MAINNET, segwitChain.getOutputScriptType());
-        assertEquals("zpub6nywkzAGfYS2siEfJtm9mo3hwDk8eUtL8EJ31XeWSd7C7x7esnfMMWmWiSs8od5jRt11arTjKLLbxCXuWNSXcxpi9PMSAphMt2ZE2gLnXGE", zpub58);
+        assertEquals("zpub6nywkzAGfYS2siEfJtm9mo3hwDk8eUtL8EJ31XeWSd7C7x7esnfMMWmWiSs8od5jRt11arTjKLLbxCXuWNSXcxpi9PMSAphMt2ZE2fF6ogd", zpub58);
         watchingKey = DeterministicKey.deserializeB58(null, xpub58, MAINNET);
         watchingKey.setCreationTime(Instant.ofEpochSecond(100000));
         segwitChain = DeterministicKeyChain.builder().watch(watchingKey)
