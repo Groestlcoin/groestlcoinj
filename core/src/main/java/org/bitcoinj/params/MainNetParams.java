@@ -65,12 +65,6 @@ public class MainNetParams extends BitcoinNetworkParams {
                 "dnsseed3.groestlcoin.org",
                 "dnsseed4.groestlcoin.org",
         };
-        httpSeeds = new HttpDiscovery.Details[] {
-                new HttpDiscovery.Details(
-                        ECKey.fromPublicOnly(Utils.HEX.decode("0248876142c407e9a05a07f96caf212eb5b54b68845ddee44739094b02e24d13e4")),
-                        URI.create("http://groestlcoin.org:8080/peers")
-                )
-        };
 
         addrSeeds = new int[] {
                 0x68EC82DE,
