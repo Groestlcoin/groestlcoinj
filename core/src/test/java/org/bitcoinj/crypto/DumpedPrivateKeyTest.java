@@ -53,7 +53,7 @@ public class DumpedPrivateKeyTest {
 
     @Test
     public void roundtripBase58_compressed()  {
-        String base58 = "cSthBXr8YQAexpKeh22LB9PdextVE1UJeahmyns5LzcmMDSy59L4"; // 33-bytes, compressed == true
+        String base58 = "cSthBXr8YQAexpKeh22LB9PdextVE1UJeahmyns5LzcmMDR4uYzy"; // 33-bytes, compressed == true
         DumpedPrivateKey dumpedPrivateKey = DumpedPrivateKey.fromBase58((Network) null, base58);
         assertTrue(dumpedPrivateKey.isPubKeyCompressed());
         assertEquals(base58, dumpedPrivateKey.toBase58());
