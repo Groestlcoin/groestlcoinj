@@ -29,6 +29,7 @@ import org.bitcoinj.crypto.ECKey;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptException;
+import org.bitcoinj.script.ScriptOpCodes;
 import org.bitcoinj.script.ScriptPattern;
 import org.bitcoinj.wallet.Wallet;
 import org.slf4j.Logger;

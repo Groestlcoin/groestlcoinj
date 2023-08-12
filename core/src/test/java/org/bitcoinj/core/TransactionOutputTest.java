@@ -105,13 +105,13 @@ public class TransactionOutputTest extends TestWithWallet {
     @Test
     public void getMinNonDustValue() {
         TransactionOutput p2pk = new TransactionOutput(null, Coin.COIN, myKey);
-        assertEquals(Coin.valueOf(576), p2pk.getMinNonDustValue());
+        assertEquals(Coin.valueOf(5760), p2pk.getMinNonDustValue());
         TransactionOutput p2pkh = new TransactionOutput(null, Coin.COIN, myKey.toAddress(ScriptType.P2PKH,
                 BitcoinNetwork.TESTNET));
-        assertEquals(Coin.valueOf(546), p2pkh.getMinNonDustValue());
+        assertEquals(Coin.valueOf(5460), p2pkh.getMinNonDustValue());
         TransactionOutput p2wpkh = new TransactionOutput(null, Coin.COIN, myKey.toAddress(ScriptType.P2WPKH,
                 BitcoinNetwork.TESTNET));
-        assertEquals(Coin.valueOf(294), p2wpkh.getMinNonDustValue());
+        assertEquals(Coin.valueOf(2940), p2wpkh.getMinNonDustValue());
     }
 
     @Test
