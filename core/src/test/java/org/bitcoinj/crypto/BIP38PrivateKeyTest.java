@@ -21,6 +21,7 @@ import org.bitcoinj.base.Network;
 import org.bitcoinj.base.exceptions.AddressFormatException;
 import org.bitcoinj.base.Base58;
 import org.bitcoinj.crypto.BIP38PrivateKey.BadPassphraseException;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -120,7 +121,7 @@ public class BIP38PrivateKeyTest {
     @Test
     public void iancoleman_mainnet() throws Exception {
         // values taken from https://iancoleman.io/bip39/
-        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(BitcoinNetwork.TESTNET,
+        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(BitcoinNetwork.MAINNET,
                 "6PRPvU4DtA8Gb3hQkbYY4z3LunYkhUsswPg6h14eiJHq357SQdZFTE7kNh");
         ECKey key = encryptedKey.decrypt("password");
         assertEquals("5JPipYm5tmoWH1xNU1AbWagqc2hyDvSsg2sT4Yf7W1q7EhKKcgi", key.getPrivateKeyEncoded(MAINNET)
@@ -130,7 +131,7 @@ public class BIP38PrivateKeyTest {
     @Test
     public void groestlcoinpaperwallet_mainnet() throws Exception {
         // values taken from https://www.groestlcoin.org/paper.html
-        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(BitcoinNetwork.TESTNET,
+        BIP38PrivateKey encryptedKey = BIP38PrivateKey.fromBase58(BitcoinNetwork.MAINNET,
                 "6PfTjgecKmcWzy4JhZf1WX8RWGT1Qwkzsv1rKNURpqCVZEkjECUbAZqwur");
         ECKey key = encryptedKey.decrypt("password");
         assertEquals("5HwDvwczJaujnL2X2N2tqNf5e3p8t21zf8yyavBPPgUJR1YLL3G", key.getPrivateKeyEncoded(MAINNET)
