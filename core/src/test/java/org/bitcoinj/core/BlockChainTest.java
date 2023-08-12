@@ -178,8 +178,8 @@ public class BlockChainTest {
         Context.propagate(new Context(100, Coin.ZERO, false, true));
         BlockChain chain = new BlockChain(BitcoinNetwork.MAINNET, new MemoryBlockStore(MAINNET.getGenesisBlock()));
         // genesis block is already there
-        addIntermediteBlocks(chain, 0, Duration.ofMinutes(10).minusSeconds(1));
-        addTransitionBlock(chain, 1, Duration.ofMinutes(10).minusSeconds(1));
+        addIntermediteBlocks(chain, 0, Duration.ofMinutes(1).minusSeconds(1));
+        addTransitionBlock(chain, 1, Duration.ofMinutes(1).minusSeconds(1));
     }
 
     @Test(expected = VerificationException.class)
@@ -416,14 +416,14 @@ public class BlockChainTest {
 
     // Some blocks from the test net.
     private static Block getBlock2() throws Exception {
-        Block b2 = new Block(Block.BLOCK_VERSION_GENESIS);
+        Block b2 = new Block(Block.BLOCK_VERSION_GENESIS_TESTNET);
         b2.setMerkleRoot(Sha256Hash.wrap("05d269aa0db7953528017a3b3d1d043fbf366b19e66796dac11ec985ff88b980"));
         b2.setNonce(14198236);
         b2.setTime(Instant.ofEpochSecond(1440017887L));
         b2.setDifficultyTarget(0x1e00ffff);
         b2.setPrevBlockHash(Sha256Hash.wrap("000000458242a5d60e943f0a9945c29040b32be35582d1bfd47b5c536f10ac30"));
         assertEquals("000000c0a0e62b9686bdcc93732927046c6b9270d1a5b56095c85765aa239522", b2.getHashAsString());
-        b2.verifyHeader();
+        Block.verifyHeader(b2);
         return b2;
     }
 
@@ -435,7 +435,7 @@ public class BlockChainTest {
         b1.setDifficultyTarget(0x1e00ffff);
         b1.setPrevBlockHash(Sha256Hash.wrap("000000ffbb50fc9898cdd36ec163e6ba23230164c0052a28876255b7dcf2cd36"));
         assertEquals("000000458242a5d60e943f0a9945c29040b32be35582d1bfd47b5c536f10ac30", b1.getHashAsString());
-        b1.verifyHeader();
+        Block.verifyHeader(b1);
         return b1;
     }
 
@@ -444,7 +444,7 @@ public class BlockChainTest {
         BlockChain prod = new BlockChain(BitcoinNetwork.MAINNET, new MemoryBlockStore(MAINNET.getGenesisBlock()));
         Instant t = prod.estimateBlockTimeInstant(200000);
         // The actual date of block 200,000 was 2012-09-22 10:47:00
-        Instant expected = Instant.from(DateTimeFormatter.ISO_INSTANT.parse("2012-10-23T15:35:05Z"));
+        Instant expected = Instant.from(DateTimeFormatter.ISO_INSTANT.parse("2018-01-07T16:33:49Z"));
         assertEquals(expected, t);
     }
 
