@@ -51,6 +51,7 @@ import static org.bitcoinj.base.Coin.CENT;
 import static org.bitcoinj.base.Coin.COIN;
 import static org.bitcoinj.base.Coin.FIFTY_COINS;
 import static org.bitcoinj.base.Coin.FIVE_COINS;
+import static org.bitcoinj.base.Coin.MAX_REWARD_COINS;
 import static org.bitcoinj.base.Coin.ZERO;
 import static org.bitcoinj.base.Coin.valueOf;
 import static org.junit.Assert.assertEquals;
@@ -188,7 +189,7 @@ public class ChainSplitTest {
         chain.add(b1);
         assertEquals(MAX_REWARD_COINS, wallet.getBalance());
         Address dest = new ECKey().toAddress(ScriptType.P2PKH, BitcoinNetwork.TESTNET);
-        Transaction spend = wallet.createSend(dest, valueOf(10, 0));
+        Transaction spend = wallet.createSend(dest, valueOf(1, 0));
         wallet.commitTx(spend);
         // Waiting for confirmation ... make it eligible for selection.
         assertEquals(Coin.ZERO, wallet.getBalance());
