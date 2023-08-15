@@ -20,7 +20,7 @@ package org.bitcoinj.core;
 import com.google.common.annotations.VisibleForTesting;
 import com.hashengineering.crypto.Groestl;
 import org.bitcoinj.base.Address;
-\import org.bitcoinj.base.Coin;
+import org.bitcoinj.base.Coin;
 import org.bitcoinj.base.Sha256Hash;
 import org.bitcoinj.base.VarInt;
 import org.bitcoinj.base.internal.Buffers;
