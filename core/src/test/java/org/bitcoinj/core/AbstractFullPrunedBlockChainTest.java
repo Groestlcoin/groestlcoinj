@@ -237,7 +237,7 @@ public abstract class AbstractFullPrunedBlockChainTest {
         } catch (Exception e) {}
     }
     
-    @Test
+    @Test @Ignore //TODO: obtain the .dat file from Groestloin Core
     public void testFirst100KBlocks() throws Exception {
         File blockFile = new File(getClass().getResource("first-100k-blocks.dat").getFile());
         BlockFileLoader loader = new BlockFileLoader(BitcoinNetwork.MAINNET, Arrays.asList(blockFile));
