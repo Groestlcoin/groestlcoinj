@@ -234,20 +234,20 @@ public class BuildCheckpoints implements Callable<Integer> {
         checkState(manager.numCheckpoints() == expectedSize);
 
         if (params.network() == BitcoinNetwork.MAINNET) {
-            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1390500000)); // Thu Jan 23 19:00:00 CET 2014
-            checkState(test.getHeight() == 280224);
+            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1527201481));
+            checkState(test.getHeight() == 2098656);
             checkState(test.getHeader().getHashAsString()
-                    .equals("00000000000000000b5d59a15f831e1c45cb688a4db6b0a60054d49a9997fa34"));
+                    .equals("000000000000040b9c89bcb522cac57086ad386b6edbf111ee60fe0c5143ca80"));
         } else if (params.network() == BitcoinNetwork.TESTNET) {
-            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1390500000)); // Thu Jan 23 19:00:00 CET 2014
-            checkState(test.getHeight() == 167328);
+            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1619042282));
+            checkState(test.getHeight() == 2098656);
             checkState(test.getHeader().getHashAsString()
-                    .equals("0000000000035ae7d5025c2538067fe7adb1cf5d5d9c31b024137d9090ed13a9"));
+                    .equals("000000c5abc7a045ff1bd8730c9ecb7244449e28f5f92716822205d39a9f4bda"));
         } else if (params.network() == BitcoinNetwork.SIGNET) {
-            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1642000000)); // 2022-01-12
-            checkState(test.getHeight() == 72576);
+            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1683756408)); // 2022-01-12
+            checkState(test.getHeight() == 1199520);
             checkState(test.getHeader().getHashAsString()
-                    .equals("0000008f763bdf23bd159a21ccf211098707671d2ca9aa72d0f586c24505c5e7"));
+                    .equals("000002ad16c4fcd0c77115c0ba1bfa9ea2c13c4af47681cee193dd322967f1c4"));
         }
     }
 
