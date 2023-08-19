@@ -8,7 +8,7 @@ bullseye-jdk11:
   after_script:
     - gradle --version
   artifacts:
-    name: bitcoinj-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+    name: groestlcoinj-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
     paths:
       - core/build/libs/*.jar
 
@@ -22,7 +22,7 @@ bookworm-jdk17:
   after_script:
     - gradle --version
   artifacts:
-    name: bitcoinj-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+    name: groestlcoinj-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
     paths:
       - core/build/libs/*.jar
 

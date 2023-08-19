@@ -22,7 +22,7 @@ jobs:
     name: JAVA ${{ matrix.distribution }} ${{ matrix.java }} OS ${{ matrix.os }} Gradle ${{ matrix.gradle }}
     steps:
       - name: Git checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -37,7 +37,7 @@ jobs:
           cmake --build .
           cd ../../..
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v2.4.2
+        uses: gradle/gradle-build-action@v2
         with:
           gradle-version: ${{ matrix.gradle }}
           arguments: -PtestJdk8=true build --info --stacktrace

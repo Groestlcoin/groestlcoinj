@@ -8,15 +8,16 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-        java: ['8', '11', '17']
+        java: ['11', '17', '19']
         distribution: ['temurin']
-        gradle: ['7.2']
+        gradle: ['7.6.2']
       fail-fast: false
     name: JAVA ${{ matrix.distribution }} ${{ matrix.java }} OS ${{ matrix.os }} Gradle ${{ matrix.gradle }}
     steps:
-      - uses: actions/checkout@v1
+      - name: Git checkout
+        uses: actions/checkout@v3
       - name: Set up JDK
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: ${{ matrix.distribution }}
           java-version: ${{ matrix.java }}
@@ -29,12 +30,12 @@ jobs:
           cmake --build .
           cd ../../..
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v1
+        uses: gradle/gradle-build-action@v2
         with:
           gradle-version: ${{ matrix.gradle }}
           arguments: assemble --stacktrace
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: always()
         with:
           name: groestlcoinj-core-${{ matrix.java }}-${{ matrix.os }}
