@@ -21,6 +21,7 @@ import org.bitcoinj.base.internal.ByteUtils;
 import org.bitcoinj.core.Block;
 import org.bitcoinj.base.Sha256Hash;
 
+import java.math.BigInteger;
 import java.time.Instant;
 
 import static org.bitcoinj.base.internal.Preconditions.checkState;
@@ -43,10 +44,10 @@ public class SigNetParams extends BitcoinNetworkParams {
         super(BitcoinNetwork.SIGNET);
 
         targetTimespan = TARGET_TIMESPAN;
-        maxTarget = ByteUtils.decodeCompactBits(Block.EASIEST_DIFFICULTY_TARGET);
+        maxTarget = new BigInteger(ByteUtils.parseHex("00000377ae000000000000000000000000000000000000000000000000000000"));
 
-        port = 38333;
-        packetMagic = 0x0a03cf40;
+        port = 31331;
+        packetMagic = 0x6f892b8f;
         dumpedPrivateKeyHeader = 239;
         addressHeader = 0x6f;
         p2shHeader = 196;
