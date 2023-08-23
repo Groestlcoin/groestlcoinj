@@ -17,20 +17,19 @@
 
 package org.bitcoinj.params;
 
-import java.net.URI;
-
+import org.bitcoinj.base.BitcoinNetwork;
+import org.bitcoinj.base.internal.ByteUtils;
 import org.bitcoinj.core.Block;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Utils;
-import org.bitcoinj.net.discovery.HttpDiscovery;
+import org.bitcoinj.base.Sha256Hash;
 
-import static com.google.common.base.Preconditions.checkState;
+import java.time.Instant;
+
+import static org.bitcoinj.base.internal.Preconditions.checkState;
 
 /**
  * Parameters for the main production network on which people trade goods and services.
  */
-public class MainNetParams extends AbstractBitcoinNetParams {
+public class MainNetParams extends BitcoinNetworkParams {
     public static final int MAINNET_MAJORITY_WINDOW = 2016;
     public static final int MAINNET_MAJORITY_REJECT_BLOCK_OUTDATED = 1912;
     public static final int MAINNET_MAJORITY_ENFORCE_BLOCK_UPGRADE = 750;
@@ -39,15 +38,13 @@ public class MainNetParams extends AbstractBitcoinNetParams {
     private static final Sha256Hash GENESIS_HASH = Sha256Hash.wrap("00000ac5927c594d49cc0bdb81759d0da8297eb614683d3acb62f0703b639023");
 
     public MainNetParams() {
-        super();
-        id = ID_MAINNET;
+        super(BitcoinNetwork.MAINNET);
 
         targetTimespan = TARGET_TIMESPAN;
-        maxTarget = Utils.decodeCompactBits(Block.STANDARD_MAX_DIFFICULTY_TARGET);
+        maxTarget = ByteUtils.decodeCompactBits(Block.STANDARD_MAX_DIFFICULTY_TARGET);
 
         port = 1331;
         packetMagic = 0xf9beb4d4;
-        maxTarget = Utils.decodeCompactBits(0x1e0fffffL);
         dumpedPrivateKeyHeader = 128;
         addressHeader = 36;
         p2shHeader = 5;
@@ -67,12 +64,6 @@ public class MainNetParams extends AbstractBitcoinNetParams {
                 "dnsseed2.groestlcoin.org",
                 "dnsseed3.groestlcoin.org",
                 "dnsseed4.groestlcoin.org",
-        };
-        httpSeeds = new HttpDiscovery.Details[] {
-                new HttpDiscovery.Details(
-                        ECKey.fromPublicOnly(Utils.HEX.decode("0248876142c407e9a05a07f96caf212eb5b54b68845ddee44739094b02e24d13e4")),
-                        URI.create("http://groestlcoin.org:8080/peers")
-                )
         };
 
         addrSeeds = new int[] {
@@ -115,18 +106,13 @@ public class MainNetParams extends AbstractBitcoinNetParams {
     public Block getGenesisBlock() {
         synchronized (GENESIS_HASH) {
             if (genesisBlock == null) {
-                genesisBlock = Block.createGenesis(this);
+                genesisBlock = Block.createGenesis();
                 genesisBlock.setDifficultyTarget(Block.STANDARD_MAX_DIFFICULTY_TARGET);
-                genesisBlock.setTime(GENESIS_TIME);
+                genesisBlock.setTime(Instant.ofEpochSecond(GENESIS_TIME));
                 genesisBlock.setNonce(GENESIS_NONCE);
-                checkState(genesisBlock.getHash().equals(GENESIS_HASH), "Invalid genesis hash");
+                checkState(genesisBlock.getHash().equals(GENESIS_HASH), () -> "invalid genesis hash");
             }
         }
         return genesisBlock;
-    }
-
-    @Override
-    public String getPaymentProtocolId() {
-        return PAYMENT_PROTOCOL_ID_MAINNET;
     }
 }

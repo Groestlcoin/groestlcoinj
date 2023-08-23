@@ -16,19 +16,31 @@
 
 package org.bitcoinj.core;
 
-import com.google.common.annotations.*;
-import com.google.common.base.*;
-import com.google.common.util.concurrent.*;
-import org.bitcoinj.utils.*;
-import org.bitcoinj.wallet.Wallet;
-import org.slf4j.*;
-
-import javax.annotation.*;
-import java.util.*;
-import java.util.concurrent.*;
-
-import static com.google.common.base.Preconditions.checkState;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.Uninterruptibles;
+import org.bitcoinj.base.internal.FutureUtils;
+import org.bitcoinj.base.internal.StreamUtils;
+import org.bitcoinj.base.internal.InternalUtils;
 import org.bitcoinj.core.listeners.PreMessageReceivedEventListener;
+import org.bitcoinj.utils.ListenableCompletableFuture;
+import org.bitcoinj.utils.Threading;
+import org.bitcoinj.wallet.Wallet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import static org.bitcoinj.base.internal.Preconditions.checkState;
 
 /**
  * Represents a single transaction broadcast that we are performing. A broadcast occurs after a new transaction is created
@@ -40,7 +52,11 @@ import org.bitcoinj.core.listeners.PreMessageReceivedEventListener;
 public class TransactionBroadcast {
     private static final Logger log = LoggerFactory.getLogger(TransactionBroadcast.class);
 
-    private final SettableFuture<Transaction> future = SettableFuture.create();
+    // This future completes when all broadcast messages were sent (to a buffer)
+    private final CompletableFuture<TransactionBroadcast> sentFuture = new CompletableFuture<>();
+
+    // This future completes when we have verified that more than numWaitingFor Peers have seen the broadcast
+    private final CompletableFuture<TransactionBroadcast> seenFuture = new CompletableFuture<>();
     private final PeerGroup peerGroup;
     private final Transaction tx;
     private int minConnections;
@@ -52,7 +68,7 @@ public class TransactionBroadcast {
     public static Random random = new Random();
     
     // Tracks which nodes sent us a reject message about this broadcast, if any. Useful for debugging.
-    private Map<Peer, RejectMessage> rejects = Collections.synchronizedMap(new HashMap<Peer, RejectMessage>());
+    private final Map<Peer, RejectMessage> rejects = Collections.synchronizedMap(new HashMap<Peer, RejectMessage>());
 
     TransactionBroadcast(PeerGroup peerGroup, Transaction tx) {
         this.peerGroup = peerGroup;
@@ -66,23 +82,32 @@ public class TransactionBroadcast {
         this.tx = tx;
     }
 
+    public Transaction transaction() {
+        return tx;
+    }
+
     @VisibleForTesting
-    public static TransactionBroadcast createMockBroadcast(Transaction tx, final SettableFuture<Transaction> future) {
+    public static TransactionBroadcast createMockBroadcast(Transaction tx, final CompletableFuture<Transaction> future) {
         return new TransactionBroadcast(tx) {
             @Override
-            public ListenableFuture<Transaction> broadcast() {
-                return future;
+            public ListenableCompletableFuture<Transaction> broadcast() {
+                return ListenableCompletableFuture.of(future);
             }
 
             @Override
-            public ListenableFuture<Transaction> future() {
-                return future;
+            public ListenableCompletableFuture<Transaction> future() {
+                return ListenableCompletableFuture.of(future);
             }
         };
     }
 
-    public ListenableFuture<Transaction> future() {
-        return future;
+    /**
+     * @return future that completes when some number of remote peers has rebroadcast the transaction
+     * @deprecated Use {@link #awaitRelayed()} (and maybe {@link CompletableFuture#thenApply(Function)})
+     */
+    @Deprecated
+    public ListenableCompletableFuture<Transaction> future() {
+        return ListenableCompletableFuture.of(awaitRelayed().thenApply(TransactionBroadcast::transaction));
     }
 
     public void setMinConnections(int minConnections) {
@@ -93,7 +118,7 @@ public class TransactionBroadcast {
         this.dropPeersAfterBroadcast = dropPeersAfterBroadcast;
     }
 
-    private PreMessageReceivedEventListener rejectionListener = new PreMessageReceivedEventListener() {
+    private final PreMessageReceivedEventListener rejectionListener = new PreMessageReceivedEventListener() {
         @Override
         public Message onPreMessageReceived(Peer peer, Message m) {
             if (m instanceof RejectMessage) {
@@ -104,7 +129,7 @@ public class TransactionBroadcast {
                     long threshold = Math.round(numWaitingFor / 2.0);
                     if (size > threshold) {
                         log.warn("Threshold for considering broadcast rejected has been reached ({}/{})", size, threshold);
-                        future.setException(new RejectedTransactionException(tx, rejectMessage));
+                        seenFuture.completeExceptionally(new RejectedTransactionException(tx, rejectMessage));
                         peerGroup.removePreMessageReceivedEventListener(this);
                     }
                 }
@@ -113,22 +138,32 @@ public class TransactionBroadcast {
         }
     };
 
-    public ListenableFuture<Transaction> broadcast() {
+    // TODO: Should this method be moved into the PeerGroup?
+    /**
+     * Broadcast this transaction to the proper calculated number of peers. Returns a future that completes when the message
+     * has been "sent" to a set of remote peers. The {@link TransactionBroadcast} itself is the returned type/value for the future.
+     * <p>
+     * The complete broadcast process includes the following steps:
+     * <ol>
+     *     <li>Wait until enough {@link org.bitcoinj.core.Peer}s are connected.</li>
+     *     <li>Broadcast the transaction to a determined number of {@link org.bitcoinj.core.Peer}s</li>
+     *     <li>Wait for confirmation from a determined number of remote peers that they have received the broadcast</li>
+     *     <li>Mark {@link TransactionBroadcast#awaitRelayed()} ()} ("seen future") as complete</li>
+     * </ol>
+     * The future returned from this method completes when Step 2 is completed.
+     * <p>
+     * It should further be noted that "broadcast" in this class means that
+     * {@link org.bitcoinj.net.MessageWriteTarget#writeBytes} has completed successfully which means the message has
+     * been sent to the "OS network buffer" -- see {@link org.bitcoinj.net.MessageWriteTarget#writeBytes} or its implementation.
+     * <p>
+     * @return A future that completes when the message has been sent (or at least buffered) to the correct number of remote Peers. The future
+     * will complete exceptionally if <i>any</i> of the peer broadcasts fails.
+     */
+    public CompletableFuture<TransactionBroadcast> broadcastOnly() {
         peerGroup.addPreMessageReceivedEventListener(Threading.SAME_THREAD, rejectionListener);
         log.info("Waiting for {} peers required for broadcast, we have {} ...", minConnections, peerGroup.getConnectedPeers().size());
-        peerGroup.waitForPeers(minConnections).addListener(new EnoughAvailablePeers(), Threading.SAME_THREAD);
-        return future;
-    }
-
-    private class EnoughAvailablePeers implements Runnable {
-        private Context context;
-
-        public EnoughAvailablePeers() {
-            this.context = Context.get();
-        }
-
-        @Override
-        public void run() {
+        final Context context = Context.get();
+        return peerGroup.waitForPeers(minConnections).thenComposeAsync( peerList /* not used */ -> {
             Context.propagate(context);
             // We now have enough connected peers to send the transaction.
             // This can be called immediately if we already have enough. Otherwise it'll be called from a peer
@@ -150,34 +185,108 @@ public class TransactionBroadcast {
             // transaction or not. However, we are not a fully validating node and this is advertised in
             // our version message, as SPV nodes cannot relay it doesn't give away any additional information
             // to skip the inv here - we wouldn't send invs anyway.
-            int numConnected = peers.size();
-            int numToBroadcastTo = (int) Math.max(1, Math.round(Math.ceil(peers.size() / 2.0)));
+            List<Peer> broadcastPeers = chooseBroadcastPeers(peers);
+            int numToBroadcastTo = broadcastPeers.size();
             numWaitingFor = (int) Math.ceil((peers.size() - numToBroadcastTo) / 2.0);
-            Collections.shuffle(peers, random);
-            peers = peers.subList(0, numToBroadcastTo);
-            log.info("broadcastTransaction: We have {} peers, adding {} to the memory pool", numConnected, tx.getTxId());
-            log.info("Sending to {} peers, will wait for {}, sending to: {}", numToBroadcastTo, numWaitingFor, Joiner.on(",").join(peers));
-            for (final Peer peer : peers) {
-                try {
-                    ListenableFuture future = peer.sendMessage(tx);
-                    if (dropPeersAfterBroadcast) {
-                        // We drop the peer shortly after the transaction has been sent, because this peer will not
-                        // send us back useful broadcast confirmations.
-                        future.addListener(new Runnable() {
-                            @Override
-                            public void run() {
-                                Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-                                peer.close();
-                            }
-                        }, Threading.THREAD_POOL);
-                    }
-                    // We don't record the peer as having seen the tx in the memory pool because we want to track only
-                    // how many peers announced to us.
-                } catch (Exception e) {
-                    log.error("Caught exception sending to {}", peer, e);
-                }
+            log.info("broadcastTransaction: We have {} peers, adding {} to the memory pool", peers.size(), tx.getTxId());
+            log.info("Sending to {} peers, will wait for {}, sending to: {}", numToBroadcastTo, numWaitingFor, InternalUtils.joiner(",").join(peers));
+            List<CompletableFuture<Void>> sentFutures = broadcastPeers.stream()
+                    .map(this::broadcastOne)
+                    .collect(StreamUtils.toUnmodifiableList());
+            // Complete successfully if ALL peer.sendMessage complete successfully, fail otherwise
+            return CompletableFuture.allOf(sentFutures.toArray(new CompletableFuture[0]));
+        }, Threading.SAME_THREAD)
+        .whenComplete((v, err) -> {
+            // Complete `sentFuture` (even though it is currently unused)
+            if (err == null) {
+                log.info("broadcast has been written to correct number of peers with peer.sendMessage(tx)");
+                sentFuture.complete(this);
+            } else {
+                log.error("broadcast - one ore more peers failed to send", err);
+                sentFuture.completeExceptionally(err);
             }
+        })
+        .thenCompose(v -> sentFuture);
+    }
+
+    /**
+     * Broadcast the transaction and wait for confirmation that the transaction has been received by the appropriate
+     * number of Peers before completing.
+     * @return A future that completes when the message has been relayed by the appropriate number of remote peers
+     */
+    public CompletableFuture<TransactionBroadcast> broadcastAndAwaitRelay() {
+        return broadcastOnly()
+                .thenCompose(broadcast -> this.seenFuture);
+    }
+
+    /**
+     * Wait for confirmation the transaction has been relayed.
+     * @return A future that completes when the message has been relayed by the appropriate number of remote peers
+     */
+    public CompletableFuture<TransactionBroadcast> awaitRelayed() {
+        return seenFuture;
+    }
+
+    /**
+     * Wait for confirmation the transaction has been sent to a remote peer. (Or at least buffered to be sent to
+     * a peer.)
+     * @return A future that completes when the message has been relayed by the appropriate number of remote peers
+     */
+    public CompletableFuture<TransactionBroadcast> awaitSent() {
+        return sentFuture;
+    }
+
+    /**
+     * If you migrate to {@link #broadcastAndAwaitRelay()} and need a {@link CompletableFuture} that returns
+     *  {@link Transaction} you can use:
+     * <pre>{@code
+     *  CompletableFuture<Transaction> seenFuture = broadcast
+     *              .broadcastAndAwaitRelay()
+     *              .thenApply(TransactionBroadcast::transaction);
+     * }</pre>
+     * @deprecated Use {@link #broadcastAndAwaitRelay()} or {@link #broadcastOnly()} as appropriate
+     */
+    @Deprecated
+    public ListenableCompletableFuture<Transaction> broadcast() {
+        return ListenableCompletableFuture.of(
+                broadcastAndAwaitRelay().thenApply(TransactionBroadcast::transaction)
+        );
+    }
+
+    private CompletableFuture<Void> broadcastOne(Peer peer) {
+        try {
+            CompletableFuture<Void> future = peer.sendMessage(tx);
+            if (dropPeersAfterBroadcast) {
+                // We drop the peer shortly after the transaction has been sent, because this peer will not
+                // send us back useful broadcast confirmations.
+                future.thenRunAsync(dropPeerAfterBroadcastHandler(peer), Threading.THREAD_POOL);
+            }
+            // We don't record the peer as having seen the tx in the memory pool because we want to track only
+            // how many peers announced to us.
+            return future;
+        } catch (Exception e) {
+            log.error("Caught exception sending to {}", peer, e);
+            return FutureUtils.failedFuture(e);
         }
+    }
+
+    private static Runnable dropPeerAfterBroadcastHandler(Peer peer) {
+        return () ->  {
+            Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+            peer.close();
+        };
+    }
+
+    /**
+     * Randomly choose a subset of connected peers to broadcast to
+     * @param connectedPeers connected peers to chose from
+     * @return list of chosen broadcast peers
+     */
+    private List<Peer> chooseBroadcastPeers(List<Peer> connectedPeers) {
+        int numToBroadcastTo = (int) Math.max(1, Math.round(Math.ceil(connectedPeers.size() / 2.0)));
+        List<Peer> peerListCopy = new ArrayList<>(connectedPeers);
+        Collections.shuffle(peerListCopy, random);
+        return peerListCopy.subList(0, numToBroadcastTo);
     }
 
     private int numSeemPeers;
@@ -212,7 +321,7 @@ public class TransactionBroadcast {
                 log.info("broadcastTransaction: {} complete", tx.getTxId());
                 peerGroup.removePreMessageReceivedEventListener(rejectionListener);
                 conf.removeEventListener(this);
-                future.set(tx);  // RE-ENTRANCY POINT
+                seenFuture.complete(TransactionBroadcast.this);  // RE-ENTRANCY POINT
             }
         }
     }
@@ -234,17 +343,13 @@ public class TransactionBroadcast {
         }
         if (callback != null) {
             final double progress = Math.min(1.0, mined ? 1.0 : numSeenPeers / (double) numWaitingFor);
-            checkState(progress >= 0.0 && progress <= 1.0, progress);
+            checkState(progress >= 0.0 && progress <= 1.0, () ->
+                    "" + progress);
             try {
                 if (executor == null)
                     callback.onBroadcastProgress(progress);
                 else
-                    executor.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            callback.onBroadcastProgress(progress);
-                        }
-                    });
+                    executor.execute(() -> callback.onBroadcastProgress(progress));
             } catch (Throwable e) {
                 log.error("Exception during progress callback", e);
             }

@@ -17,17 +17,15 @@
 
 package org.bitcoinj.tools;
 
-import org.bitcoinj.core.listeners.NewBestBlockListener;
+import org.bitcoinj.base.BitcoinNetwork;
+import org.bitcoinj.base.Sha256Hash;
+import org.bitcoinj.base.internal.TimeUtils;
 import org.bitcoinj.core.*;
 import org.bitcoinj.net.discovery.DnsDiscovery;
-import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.params.RegTestParams;
-import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.MemoryBlockStore;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.utils.Threading;
-import com.google.common.io.Resources;
 import picocli.CommandLine;
 
 import java.io.DataOutputStream;
@@ -44,12 +42,15 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
-import java.util.*;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.bitcoinj.base.internal.Preconditions.checkState;
 
 /**
  * Downloads and verifies a full chain from your local peer, emitting checkpoints at each difficulty transition period
@@ -58,7 +59,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @CommandLine.Command(name = "build-checkpoints", usageHelpAutoWidth = true, sortOptions = false, description = "Create checkpoint files to use with CheckpointManager.")
 public class BuildCheckpoints implements Callable<Integer> {
     @CommandLine.Option(names = "--net", description = "Which network to connect to. Valid values: ${COMPLETION-CANDIDATES}. Default: ${DEFAULT-VALUE}")
-    private NetworkEnum net = NetworkEnum.MAIN;
+    private BitcoinNetwork net = BitcoinNetwork.MAINNET;
     @CommandLine.Option(names = "--peer", description = "IP address/domain name for connection instead of localhost.")
     private String peer = null;
     @CommandLine.Option(names = "--days", description = "How many days to keep as a safety margin. Checkpointing will be done up to this many days ago.")
@@ -79,18 +80,20 @@ public class BuildCheckpoints implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         final String suffix;
+        params = NetworkParameters.of(net);
+        Context.propagate(new Context());
+
         switch (net) {
-            case MAIN:
-            case PROD:
-                params = MainNetParams.get();
+            case MAINNET:
                 suffix = "";
                 break;
-            case TEST:
-                params = TestNet3Params.get();
+            case TESTNET:
                 suffix = "-testnet";
                 break;
+            case SIGNET:
+                suffix = "-signet";
+                break;
             case REGTEST:
-                params = RegTestParams.get();
                 suffix = "-regtest";
                 break;
             default:
@@ -99,9 +102,9 @@ public class BuildCheckpoints implements Callable<Integer> {
 
         // Configure bitcoinj to fetch only headers, not save them to disk, connect to a local fully synced/validated
         // node and to save block headers that are on interval boundaries, as long as they are <1 month old.
-        final BlockStore store = new MemoryBlockStore(params);
-        final BlockChain chain = new BlockChain(params, store);
-        final PeerGroup peerGroup = new PeerGroup(params, chain);
+        final BlockStore store = new MemoryBlockStore(params.getGenesisBlock());
+        final BlockChain chain = new BlockChain(net, store);
+        final PeerGroup peerGroup = new PeerGroup(net, chain);
 
         final InetAddress ipAddress;
 
@@ -117,9 +120,11 @@ public class BuildCheckpoints implements Callable<Integer> {
                 return 1;
             }
         } else if (networkHasDnsSeeds) {
-            // for PROD and TEST use a peer group discovered with dns
+            // use a peer group discovered with dns
             peerGroup.setUserAgent("PeerMonitor", "1.0");
-            if (net == NetworkEnum.TEST) {
+            peerGroup.setMaxConnections(20);
+            peerGroup.addPeerDiscovery(new DnsDiscovery(net));
+            if (net == BitcoinNetwork.TESTNET || net == BitcoinNetwork.SIGNET) {
                 peerGroup.setMaxConnections(6);
             } else {
                 peerGroup.setMaxConnections(20);
@@ -141,17 +146,18 @@ public class BuildCheckpoints implements Callable<Integer> {
         // Sorted map of block height to StoredBlock object.
         final TreeMap<Integer, StoredBlock> checkpoints = new TreeMap<>();
 
-        long now = new Date().getTime() / 1000;
-        peerGroup.setFastCatchupTimeSecs(now);
+        Instant now = TimeUtils.currentTime();
+        peerGroup.setFastCatchupTime(now);
 
-        final long timeAgo = now - (86400 * days);
-        System.out.println("Checkpointing up to " + Utils.dateTimeFormat(timeAgo * 1000));
+        Instant timeAgo = now.minus(days, ChronoUnit.DAYS);
+        System.out.println("Checkpointing up to " + TimeUtils.dateTimeFormat(timeAgo));
 
         chain.addNewBestBlockListener(Threading.SAME_THREAD, block -> {
             int height = block.getHeight();
-            if (height % CHECKPOINT_INTERVAL == 0 && block.getHeader().getTimeSeconds() <= timeAgo) {
+            if (height % CHECKPOINT_INTERVAL == 0 && timeAgo.isAfter(block.getHeader().time())) {
                 System.out.println(String.format("Checkpointing block %s at height %d, time %s",
-                        block.getHeader().getHash(), block.getHeight(), Utils.dateTimeFormat(block.getHeader().getTime())));
+                        block.getHeader().getHash(), block.getHeight(),
+                        TimeUtils.dateTimeFormat(block.getHeader().time())));
                 checkpoints.put(height, block);
             }
         });
@@ -227,21 +233,26 @@ public class BuildCheckpoints implements Callable<Integer> {
 
         checkState(manager.numCheckpoints() == expectedSize);
 
-        if (params.getId().equals(NetworkParameters.ID_MAINNET)) {
-//            StoredBlock test = manager.getCheckpointBefore(1390500000); // Thu Jan 23 19:00:00 CET 2014
-//            checkState(test.getHeight() == 280224);
- //           checkState(test.getHeader().getHashAsString()
-                    //.equals("00000000000000000b5d59a15f831e1c45cb688a4db6b0a60054d49a9997fa34"));
-        } else if (params.getId().equals(NetworkParameters.ID_TESTNET)) {
-//            StoredBlock test = manager.getCheckpointBefore(1390500000); // Thu Jan 23 19:00:00 CET 2014
-            //checkState(test.getHeight() == 167328);
-            //checkState(test.getHeader().getHashAsString()
-              //      .equals("0000000000035ae7d5025c2538067fe7adb1cf5d5d9c31b024137d9090ed13a9"));
+        if (params.network() == BitcoinNetwork.MAINNET) {
+            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1527201481));
+            checkState(test.getHeight() == 2098656);
+            checkState(test.getHeader().getHashAsString()
+                    .equals("000000000000040b9c89bcb522cac57086ad386b6edbf111ee60fe0c5143ca80"));
+        } else if (params.network() == BitcoinNetwork.TESTNET) {
+            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1619042282));
+            checkState(test.getHeight() == 2098656);
+            checkState(test.getHeader().getHashAsString()
+                    .equals("000000c5abc7a045ff1bd8730c9ecb7244449e28f5f92716822205d39a9f4bda"));
+        } else if (params.network() == BitcoinNetwork.SIGNET) {
+            StoredBlock test = manager.getCheckpointBefore(Instant.ofEpochSecond(1683756408)); // 2022-01-12
+            checkState(test.getHeight() == 1199520);
+            checkState(test.getHeader().getHashAsString()
+                    .equals("000002ad16c4fcd0c77115c0ba1bfa9ea2c13c4af47681cee193dd322967f1c4"));
         }
     }
 
     private static void startPeerGroup(PeerGroup peerGroup, InetAddress ipAddress) {
-        final PeerAddress peerAddress = new PeerAddress(params, ipAddress);
+        final PeerAddress peerAddress = PeerAddress.simple(ipAddress, params.getPort());
         System.out.println("Connecting to " + peerAddress + "...");
         peerGroup.addAddress(peerAddress);
         peerGroup.start();

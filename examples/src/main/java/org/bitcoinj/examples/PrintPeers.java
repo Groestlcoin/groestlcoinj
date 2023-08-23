@@ -16,6 +16,8 @@
 
 package org.bitcoinj.examples;
 
+import org.bitcoinj.base.BitcoinNetwork;
+import org.bitcoinj.base.Network;
 import org.bitcoinj.core.listeners.PeerConnectedEventListener;
 import org.bitcoinj.core.listeners.PeerDisconnectedEventListener;
 import org.bitcoinj.core.NetworkParameters;
@@ -25,17 +27,15 @@ import org.bitcoinj.core.VersionMessage;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.net.discovery.PeerDiscoveryException;
 import org.bitcoinj.net.NioClientManager;
-import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.utils.BriefLogFormatter;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Prints a list of IP addresses obtained from DNS.
@@ -55,35 +55,36 @@ public class PrintPeers {
         }
     }
 
-    private static void printDNS() throws PeerDiscoveryException {
+    private static void printDNS(Network network) throws PeerDiscoveryException {
         long start = System.currentTimeMillis();
-        DnsDiscovery dns = new DnsDiscovery(MainNetParams.get());
-        dnsPeers = dns.getPeers(0, 10, TimeUnit.SECONDS);
+        DnsDiscovery dns = new DnsDiscovery(network);
+        dnsPeers = dns.getPeers(0, Duration.ofSeconds(10));
         printPeers(dnsPeers);
         printElapsed(start);
     }
 
     public static void main(String[] args) throws Exception {
         BriefLogFormatter.init();
+        final Network network = BitcoinNetwork.MAINNET;
+        final NetworkParameters params = NetworkParameters.of(network);
         System.out.println("=== DNS ===");
-        printDNS();
+        printDNS(network);
         System.out.println("=== Version/chain heights ===");
 
         ArrayList<InetAddress> addrs = new ArrayList<>();
         for (InetSocketAddress peer : dnsPeers) addrs.add(peer.getAddress());
         System.out.println("Scanning " + addrs.size() + " peers:");
 
-        final NetworkParameters params = MainNetParams.get();
         final Object lock = new Object();
         final long[] bestHeight = new long[1];
 
-        List<ListenableFuture<Void>> futures = new ArrayList<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
         NioClientManager clientManager = new NioClientManager();
         for (final InetAddress addr : addrs) {
             InetSocketAddress address = new InetSocketAddress(addr, params.getPort());
             final Peer peer = new Peer(params, new VersionMessage(params, 0),
-                    new PeerAddress(params, address), null);
-            final SettableFuture<Void> future = SettableFuture.create();
+                    PeerAddress.simple(address), null);
+            final CompletableFuture<Void> future = new CompletableFuture<>();
             // Once the connection has completed version handshaking ...
             peer.addConnectedEventListener((p, peerCount) -> {
                 // Check the chain height it claims to have.
@@ -102,18 +103,18 @@ public class PrintPeers {
                     }
                 }
                 // Now finish the future and close the connection
-                future.set(null);
+                future.complete(null);
                 peer.close();
             });
             peer.addDisconnectedEventListener((p, peerCount) -> {
                 if (!future.isDone())
                     System.out.println("Failed to talk to " + addr);
-                future.set(null);
+                future.complete(null);
             });
             clientManager.openConnection(address, peer);
             futures.add(future);
         }
         // Wait for every tried connection to finish.
-        Futures.successfulAsList(futures).get();
+        CompletableFuture.allOf(futures.toArray( new CompletableFuture[0])).join();
     }
 }

@@ -16,21 +16,12 @@
 
 package org.bitcoinj.utils;
 
-import org.bitcoinj.utils.BtcAutoFormat.Style;
-import static org.bitcoinj.utils.BtcAutoFormat.Style.*;
-
-import org.bitcoinj.core.Coin;
-import java.util.Objects;
-import com.google.common.collect.ImmutableList;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkState;
 import com.google.common.base.Strings;
+import org.bitcoinj.base.Coin;
+import org.bitcoinj.utils.BtcAutoFormat.Style;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-
-import static java.math.RoundingMode.HALF_UP;
-
 import java.text.AttributedCharacterIterator;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -39,12 +30,20 @@ import java.text.Format;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.ParsePosition;
-
-import java.util.Locale;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static java.math.RoundingMode.HALF_UP;
+import static org.bitcoinj.base.internal.Preconditions.checkArgument;
+import static org.bitcoinj.base.internal.Preconditions.checkState;
+import static org.bitcoinj.utils.BtcAutoFormat.Style.CODE;
+import static org.bitcoinj.utils.BtcAutoFormat.Style.SYMBOL;
 
 /**
  * <p>Instances of this class format and parse locale-specific numerical
@@ -748,7 +747,8 @@ public abstract class BtcFormat extends Format {
 
     /** This single constructor is invoked by the overriding subclass constructors. */
     protected BtcFormat(DecimalFormat numberFormat, int minDecimals, List<Integer> groups) {
-        checkArgument(minDecimals >= 0, "There can be no fewer than zero fractional decimal places");
+        checkArgument(minDecimals >= 0, () ->
+                "there can be no fewer than zero fractional decimal places");
         this.numberFormat = numberFormat;
         this.numberFormat.setParseBigDecimal(true);
         this.numberFormat.setRoundingMode(HALF_UP);
@@ -931,7 +931,8 @@ public abstract class BtcFormat extends Format {
     private static List<Integer> boxAsList(int[] elements) throws IllegalArgumentException {
         List<Integer> list = new ArrayList<>(elements.length);
         for (int e : elements) {
-            checkArgument(e > 0, "Size of decimal group must be at least one.");
+            checkArgument(e > 0, () ->
+                    "size of decimal group must be at least one.");
             list.add(e);
         }
         return list;
@@ -1187,7 +1188,8 @@ public abstract class BtcFormat extends Format {
 
     private StringBuffer format(Object qty, StringBuffer toAppendTo, FieldPosition pos,
                                             int minDecimals, List<Integer> fractionGroups) {
-        checkArgument(minDecimals >= 0, "There can be no fewer than zero fractional decimal places");
+        checkArgument(minDecimals >= 0, () ->
+                "there can be no fewer than zero fractional decimal places");
         synchronized (numberFormat) {
             DecimalFormatSymbols anteSigns = numberFormat.getDecimalFormatSymbols();
             BigDecimal denominatedUnitCount = denominateAndRound(inSatoshis(qty), minDecimals, fractionGroups);
@@ -1235,11 +1237,13 @@ public abstract class BtcFormat extends Format {
     /** Sets the number of fractional decimal places to be displayed on the given
      *  NumberFormat object to the value of the given integer.
      *  @return The minimum and maximum fractional places settings that the
-     *          formatter had before this change, as an ImmutableList. */
-    private static ImmutableList<Integer> setFormatterDigits(DecimalFormat formatter, int min, int max) {
-        ImmutableList<Integer> ante = ImmutableList.of(
-            formatter.getMinimumFractionDigits(),
-            formatter.getMaximumFractionDigits()
+     *          formatter had before this change, as an unmodifiable List. */
+    private static List<Integer> setFormatterDigits(DecimalFormat formatter, int min, int max) {
+        List<Integer> ante = Collections.unmodifiableList(
+            Arrays.asList(
+                formatter.getMinimumFractionDigits(),
+                formatter.getMaximumFractionDigits()
+            )
         );
         formatter.setMinimumFractionDigits(min);
         formatter.setMaximumFractionDigits(max);
@@ -1308,7 +1312,7 @@ public abstract class BtcFormat extends Format {
     @Override
     public final Object parseObject(String source, ParsePosition pos) { return parse(source, pos); }
 
-    private class ScaleMatcher {
+    private static class ScaleMatcher {
         public Pattern pattern;
         public int scale;
         ScaleMatcher(Pattern p, int s) { pattern = p; scale = s; }

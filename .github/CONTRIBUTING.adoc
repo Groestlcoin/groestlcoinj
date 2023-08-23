@@ -1,0 +1,3 @@
+# Contributing Guidelines
+
+We love https://github.com/Groestlcoin/groestlcoinj/pulls[pull requests] from everyone! https://github.com/Groestlcoin/groestlcoinj/issues[Bug reports] are also welcome.

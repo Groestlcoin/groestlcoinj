@@ -16,11 +16,29 @@
 
 package org.bitcoinj.store;
 
-import org.bitcoinj.core.*;
-import com.google.common.base.Preconditions;
+import org.bitcoinj.base.Network;
+import org.bitcoinj.base.ScriptType;
+import org.bitcoinj.base.Address;
+import org.bitcoinj.crypto.ECKey;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.base.Sha256Hash;
+import org.bitcoinj.core.StoredBlock;
+import org.bitcoinj.core.StoredUndoableBlock;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionOutPoint;
+import org.bitcoinj.core.UTXO;
+import org.bitcoinj.core.UTXOProviderException;
+import org.bitcoinj.core.VerificationException;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Used as a key for memory map (to avoid having to think about NetworkParameters,
@@ -272,14 +290,14 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
 
     @Override
     public synchronized void put(StoredBlock block) throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         Sha256Hash hash = block.getHeader().getHash();
         blockMap.put(hash, new StoredBlockAndWasUndoableFlag(block, false));
     }
     
     @Override
     public synchronized final void put(StoredBlock storedBlock, StoredUndoableBlock undoableBlock) throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         Sha256Hash hash = storedBlock.getHeader().getHash();
         fullBlockMap.put(hash, storedBlock.getHeight(), undoableBlock);
         blockMap.put(hash, new StoredBlockAndWasUndoableFlag(storedBlock, true));
@@ -288,7 +306,7 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
     @Override
     @Nullable
     public synchronized StoredBlock get(Sha256Hash hash) throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         StoredBlockAndWasUndoableFlag storedBlock = blockMap.get(hash);
         return storedBlock == null ? null : storedBlock.block;
     }
@@ -296,7 +314,7 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
     @Override
     @Nullable
     public synchronized StoredBlock getOnceUndoableStoredBlock(Sha256Hash hash) throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         StoredBlockAndWasUndoableFlag storedBlock = blockMap.get(hash);
         return (storedBlock != null && storedBlock.wasUndoable) ? storedBlock.block : null;
     }
@@ -304,31 +322,31 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
     @Override
     @Nullable
     public synchronized StoredUndoableBlock getUndoBlock(Sha256Hash hash) throws BlockStoreException {
-        Preconditions.checkNotNull(fullBlockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(fullBlockMap, "MemoryFullPrunedBlockStore is closed");
         return fullBlockMap.get(hash);
     }
 
     @Override
     public synchronized StoredBlock getChainHead() throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         return chainHead;
     }
 
     @Override
     public synchronized final void setChainHead(StoredBlock chainHead) throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         this.chainHead = chainHead;
     }
     
     @Override
     public synchronized StoredBlock getVerifiedChainHead() throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         return verifiedChainHead;
     }
 
     @Override
     public synchronized final void setVerifiedChainHead(StoredBlock chainHead) throws BlockStoreException {
-        Preconditions.checkNotNull(blockMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(blockMap, "MemoryFullPrunedBlockStore is closed");
         this.verifiedChainHead = chainHead;
         if (this.chainHead.getHeight() < chainHead.getHeight())
             setChainHead(chainHead);
@@ -347,19 +365,19 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
     @Override
     @Nullable
     public synchronized UTXO getTransactionOutput(Sha256Hash hash, long index) throws BlockStoreException {
-        Preconditions.checkNotNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
         return transactionOutputMap.get(new StoredTransactionOutPoint(hash, index));
     }
 
     @Override
     public synchronized void addUnspentTransactionOutput(UTXO out) throws BlockStoreException {
-        Preconditions.checkNotNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
         transactionOutputMap.put(new StoredTransactionOutPoint(out), out);
     }
 
     @Override
     public synchronized void removeUnspentTransactionOutput(UTXO out) throws BlockStoreException {
-        Preconditions.checkNotNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
+        Objects.requireNonNull(transactionOutputMap, "MemoryFullPrunedBlockStore is closed");
         if (transactionOutputMap.remove(new StoredTransactionOutPoint(out)) == null)
             throw new BlockStoreException("Tried to remove a UTXO from MemoryFullPrunedBlockStore that it didn't have!");
     }
@@ -394,8 +412,8 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
     }
 
     @Override
-    public NetworkParameters getParams() {
-        return params;
+    public Network network() {
+        return params.network();
     }
 
     @Override
@@ -416,7 +434,7 @@ public class MemoryFullPrunedBlockStore implements FullPrunedBlockStore {
         for (UTXO output : outputsList) {
             for (ECKey key : keys) {
                 // TODO switch to pubKeyHash in order to support native segwit addresses
-                Address address = LegacyAddress.fromKey(params, key);
+                Address address = key.toAddress(ScriptType.P2PKH, params.network());
                 if (output.getAddress().equals(address.toString())) {
                     foundOutputs.add(output);
                 }

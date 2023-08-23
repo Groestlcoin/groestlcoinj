@@ -17,7 +17,11 @@
 
 package org.bitcoinj.signers;
 
-import org.bitcoinj.core.*;
+import org.bitcoinj.crypto.ECKey;
+import org.bitcoinj.base.Sha256Hash;
+import org.bitcoinj.core.Transaction;
+import org.bitcoinj.core.TransactionInput;
+import org.bitcoinj.core.TransactionOutput;
 import org.bitcoinj.crypto.ChildNumber;
 import org.bitcoinj.crypto.TransactionSignature;
 import org.bitcoinj.script.Script;
@@ -29,8 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
 
 /**
  * <p>This signer may be used as a template for creating custom multisig transaction signers.</p>
@@ -65,7 +68,7 @@ public abstract class CustomTransactionSigner implements TransactionSigner {
                 return false;
             }
 
-            Script inputScript = checkNotNull(txIn.getScriptSig());
+            Script inputScript = Objects.requireNonNull(txIn.getScriptSig());
 
             try {
                 // We assume if its already signed, its hopefully got a SIGHASH type that will not invalidate when
@@ -97,7 +100,7 @@ public abstract class CustomTransactionSigner implements TransactionSigner {
 
     protected abstract SignatureAndKey getSignature(Sha256Hash sighash, List<ChildNumber> derivationPath);
 
-    public class SignatureAndKey {
+    public static class SignatureAndKey {
         public final ECKey.ECDSASignature sig;
         public final ECKey pubKey;
 
@@ -106,7 +109,6 @@ public abstract class CustomTransactionSigner implements TransactionSigner {
             this.pubKey = pubKey;
         }
     }
-
 }
 
 

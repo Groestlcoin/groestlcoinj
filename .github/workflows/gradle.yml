@@ -5,6 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
@@ -39,7 +40,7 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           gradle-version: ${{ matrix.gradle }}
-          arguments: build --stacktrace
+          arguments: -PtestJdk8=true build --info --stacktrace
       - name: Upload Test Results and Reports
         uses: actions/upload-artifact@v3
         if: always()
@@ -48,3 +49,7 @@ jobs:
           path: |
             core/build/reports/tests/test/
             core/build/test-results/test/
+            wallettool/build/reports/tests/test/
+            wallettool/build/test-results/test/
+            integration-test/build/reports/tests/test/
+            integration-test/build/test-results/test/

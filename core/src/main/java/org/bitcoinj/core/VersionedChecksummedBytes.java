@@ -25,6 +25,8 @@ import java.util.Arrays;
 import com.google.common.base.Objects;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.UnsignedBytes;
+import org.bitcoinj.base.Base58;
+import org.bitcoinj.base.exceptions.AddressFormatException;
 
 /**
  * <p>In Bitcoin the following format is often used to represent some type of key:</p>

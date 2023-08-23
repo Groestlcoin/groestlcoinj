@@ -16,6 +16,12 @@
 
 package org.bitcoinj.script;
 
+import com.google.common.primitives.Bytes;
+import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.Test;
+
+import java.util.Random;
+
 import static org.bitcoinj.script.ScriptOpCodes.OP_0;
 import static org.bitcoinj.script.ScriptOpCodes.OP_IF;
 import static org.bitcoinj.script.ScriptOpCodes.OP_PUSHDATA1;
@@ -25,13 +31,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
-import java.util.Random;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
-
-import com.google.common.primitives.Bytes;
 
 public class ScriptChunkTest {
 
@@ -58,15 +57,15 @@ public class ScriptChunkTest {
 
     @Test
     public void testShortestPossibleDataPush() {
-        assertTrue("empty push", new ScriptBuilder().data(new byte[0]).build().getChunks().get(0)
+        assertTrue("empty push", new ScriptBuilder().data(new byte[0]).build().chunks().get(0)
                 .isShortestPossiblePushData());
 
         for (byte i = -1; i < 127; i++)
-            assertTrue("push of single byte " + i, new ScriptBuilder().data(new byte[] { i }).build().getChunks()
+            assertTrue("push of single byte " + i, new ScriptBuilder().data(new byte[] { i }).build().chunks()
                     .get(0).isShortestPossiblePushData());
 
         for (int len = 2; len < Script.MAX_SCRIPT_ELEMENT_SIZE; len++)
-            assertTrue("push of " + len + " bytes", new ScriptBuilder().data(new byte[len]).build().getChunks().get(0)
+            assertTrue("push of " + len + " bytes", new ScriptBuilder().data(new byte[len]).build().chunks().get(0)
                     .isShortestPossiblePushData());
 
         // non-standard chunks

@@ -16,8 +16,14 @@
 
 package org.bitcoinj.core;
 
-import com.google.common.collect.ImmutableList;
-import org.bitcoinj.params.MainNetParams;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import org.bitcoinj.base.Address;
+import org.bitcoinj.base.BitcoinNetwork;
+import org.bitcoinj.base.Coin;
+import org.bitcoinj.base.LegacyAddress;
+import org.bitcoinj.base.ScriptType;
+import org.bitcoinj.crypto.ECKey;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.bitcoinj.script.ScriptPattern;
@@ -27,9 +33,21 @@ import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import static org.junit.Assert.*;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
+import java.util.stream.Stream;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(JUnitParamsRunner.class)
 public class TransactionOutputTest extends TestWithWallet {
 
     @Before
@@ -52,8 +70,8 @@ public class TransactionOutputTest extends TestWithWallet {
         ECKey otherKey = new ECKey();
 
         // Create multi-sig transaction
-        Transaction multiSigTransaction = new Transaction(UNITTEST);
-        ImmutableList<ECKey> keys = ImmutableList.of(myKey, otherKey);
+        Transaction multiSigTransaction = new Transaction();
+        List<ECKey> keys = Arrays.asList(myKey, otherKey);
 
         Script scriptPubKey = ScriptBuilder.createMultiSigOutputScript(2, keys);
         multiSigTransaction.addOutput(Coin.COIN, scriptPubKey);
@@ -66,18 +84,18 @@ public class TransactionOutputTest extends TestWithWallet {
     }
 
     @Test
-    public void testP2SHOutputScript() throws Exception {
+    public void testP2SHOutputScript() {
         String P2SHAddressString = "35b9vsyH1KoFT5a5KtrKusaCcPLkh4FHmu";
-        Address P2SHAddress = LegacyAddress.fromBase58(MAINNET, P2SHAddressString);
+        Address P2SHAddress = LegacyAddress.fromBase58(P2SHAddressString, BitcoinNetwork.MAINNET);
         Script script = ScriptBuilder.createOutputScript(P2SHAddress);
-        Transaction tx = new Transaction(MAINNET);
+        Transaction tx = new Transaction();
         tx.addOutput(Coin.COIN, script);
-        assertEquals(P2SHAddressString, tx.getOutput(0).getScriptPubKey().getToAddress(MAINNET).toString());
+        assertEquals(P2SHAddressString, tx.getOutput(0).getScriptPubKey().getToAddress(BitcoinNetwork.MAINNET).toString());
     }
 
     @Test
-    public void getAddressTests() throws Exception {
-        Transaction tx = new Transaction(MAINNET);
+    public void getAddressTests() {
+        Transaction tx = new Transaction();
         tx.addOutput(Coin.CENT, ScriptBuilder.createOpReturnScript("hello world!".getBytes()));
         assertTrue(ScriptPattern.isOpReturn(tx.getOutput(0).getScriptPubKey()));
         assertFalse(ScriptPattern.isP2PK(tx.getOutput(0).getScriptPubKey()));
@@ -85,12 +103,55 @@ public class TransactionOutputTest extends TestWithWallet {
     }
 
     @Test
-    public void getMinNonDustValue() throws Exception {
-        TransactionOutput p2pk = new TransactionOutput(UNITTEST, null, Coin.COIN, myKey);
+    public void getMinNonDustValue() {
+        TransactionOutput p2pk = new TransactionOutput(null, Coin.COIN, myKey);
         assertEquals(Coin.valueOf(5760), p2pk.getMinNonDustValue());
-        TransactionOutput p2pkh = new TransactionOutput(UNITTEST, null, Coin.COIN, LegacyAddress.fromKey(UNITTEST, myKey));
+        TransactionOutput p2pkh = new TransactionOutput(null, Coin.COIN, myKey.toAddress(ScriptType.P2PKH,
+                BitcoinNetwork.TESTNET));
         assertEquals(Coin.valueOf(5460), p2pkh.getMinNonDustValue());
-        TransactionOutput p2wpkh = new TransactionOutput(UNITTEST, null, Coin.COIN, SegwitAddress.fromKey(UNITTEST, myKey));
+        TransactionOutput p2wpkh = new TransactionOutput(null, Coin.COIN, myKey.toAddress(ScriptType.P2WPKH,
+                BitcoinNetwork.TESTNET));
         assertEquals(Coin.valueOf(2940), p2wpkh.getMinNonDustValue());
+    }
+
+    @Test
+    public void toString_() {
+        TransactionOutput p2pk = new TransactionOutput(null, Coin.COIN, myKey);
+        p2pk.toString();
+        TransactionOutput p2pkh = new TransactionOutput(null, Coin.COIN, myKey.toAddress(ScriptType.P2PKH,
+                BitcoinNetwork.TESTNET));
+        p2pkh.toString();
+        TransactionOutput p2wpkh = new TransactionOutput(null, Coin.COIN, myKey.toAddress(ScriptType.P2WPKH,
+                BitcoinNetwork.TESTNET));
+        p2wpkh.toString();
+    }
+
+    @Test
+    @Parameters(method = "randomOutputs")
+    public void write(TransactionOutput output) {
+        ByteBuffer buf = ByteBuffer.allocate(output.getMessageSize());
+        output.write(buf);
+        assertFalse(buf.hasRemaining());
+    }
+
+    private Iterator<TransactionOutput> randomOutputs() {
+        Random random = new Random();
+        Transaction parent = new Transaction();
+        return Stream.generate(() -> {
+            byte[] randomBytes = new byte[100];
+            random.nextBytes(randomBytes);
+            return new TransactionOutput(parent, Coin.ofSat(Math.abs(random.nextLong())), randomBytes);
+        }).limit(10).iterator();
+    }
+
+    @Test
+    public void negativeValue_minusOne() {
+        // -1 is allowed because it is used as a sentinel value
+        new TransactionOutput(new Transaction(), Coin.ofSat(-1), new byte[0]);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void negativeValue() {
+        new TransactionOutput(new Transaction(), Coin.ofSat(-2), new byte[0]);
     }
 }

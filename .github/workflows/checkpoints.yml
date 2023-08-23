@@ -29,9 +29,9 @@ jobs:
         with:
           gradle-version: ${{ matrix.gradle }}
       - name: Build mainnet checkpoints
-        run: ./tools/build-checkpoints --net=PROD
+        run: ./tools/build-checkpoints --net=MAINNET
       - name: Build testnet checkpoints
-        run: ./tools/build-checkpoints --net=TEST
+        run: ./tools/build-checkpoints --net=TESTNET
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:

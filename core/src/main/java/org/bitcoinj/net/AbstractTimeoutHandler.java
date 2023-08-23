@@ -16,66 +16,55 @@
 
 package org.bitcoinj.net;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import java.time.Duration;
 
 /**
- * <p>A base class which provides basic support for socket timeouts. It is used instead of integrating timeouts into the
+ * A base class which provides basic support for socket timeouts. It is used instead of integrating timeouts into the
  * NIO select thread both for simplicity and to keep code shared between NIO and blocking sockets as much as possible.
- * </p>
+ * <p>
+ * @deprecated Don't extend this class, implement {@link TimeoutHandler} using {@link SocketTimeoutTask} instead
  */
-public abstract class AbstractTimeoutHandler {
-    // TimerTask and timeout value which are added to a timer to kill the connection on timeout
-    private TimerTask timeoutTask;
-    private long timeoutMillis = 0;
-    private boolean timeoutEnabled = true;
+@Deprecated
+public abstract class AbstractTimeoutHandler implements TimeoutHandler {
+    private final SocketTimeoutTask timeoutTask;
 
-    // A timer which manages expiring channels as their timeouts occur (if configured).
-    private static final Timer timeoutTimer = new Timer("AbstractTimeoutHandler timeouts", true);
+    public AbstractTimeoutHandler() {
+        timeoutTask = new SocketTimeoutTask(this::timeoutOccurred);
+    }
 
     /**
      * <p>Enables or disables the timeout entirely. This may be useful if you want to store the timeout value but wish
      * to temporarily disable/enable timeouts.</p>
      *
-     * <p>The default is for timeoutEnabled to be true but timeoutMillis to be set to 0 (ie disabled).</p>
+     * <p>The default is for timeoutEnabled to be true but timeout to be set to {@link Duration#ZERO} (ie disabled).</p>
      *
      * <p>This call will reset the current progress towards the timeout.</p>
      */
+    @Override
     public synchronized final void setTimeoutEnabled(boolean timeoutEnabled) {
-        this.timeoutEnabled = timeoutEnabled;
-        resetTimeout();
+        timeoutTask.setTimeoutEnabled(timeoutEnabled);
     }
 
     /**
-     * <p>Sets the receive timeout to the given number of milliseconds, automatically killing the connection if no
+     * <p>Sets the receive timeout, automatically killing the connection if no
      * messages are received for this long</p>
      *
-     * <p>A timeout of 0 is interpreted as no timeout.</p>
+     * <p>A timeout of 0{@link Duration#ZERO} is interpreted as no timeout.</p>
      *
-     * <p>The default is for timeoutEnabled to be true but timeoutMillis to be set to 0 (ie disabled).</p>
+     * <p>The default is for timeoutEnabled to be true but timeout to be set to {@link Duration#ZERO} (ie disabled).</p>
      *
      * <p>This call will reset the current progress towards the timeout.</p>
      */
-    public synchronized final void setSocketTimeout(int timeoutMillis) {
-        this.timeoutMillis = timeoutMillis;
-        resetTimeout();
+    @Override
+    public synchronized final void setSocketTimeout(Duration timeout) {
+        timeoutTask.setSocketTimeout(timeout);
     }
 
     /**
      * Resets the current progress towards timeout to 0.
      */
     protected synchronized void resetTimeout() {
-        if (timeoutTask != null)
-            timeoutTask.cancel();
-        if (timeoutMillis == 0 || !timeoutEnabled)
-            return;
-        timeoutTask = new TimerTask() {
-            @Override
-            public void run() {
-                timeoutOccurred();
-            }
-        };
-        timeoutTimer.schedule(timeoutTask, timeoutMillis);
+        timeoutTask.resetTimeout();
     }
 
     protected abstract void timeoutOccurred();

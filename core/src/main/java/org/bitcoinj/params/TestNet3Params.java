@@ -17,31 +17,26 @@
 
 package org.bitcoinj.params;
 
-import org.bitcoinj.core.*;
-
-import java.math.BigInteger;
-import java.net.URI;
-import java.util.Date;
-
-
+import org.bitcoinj.base.BitcoinNetwork;
+import org.bitcoinj.base.internal.ByteUtils;
 import org.bitcoinj.core.Block;
-import org.bitcoinj.core.ECKey;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.base.Sha256Hash;
 import org.bitcoinj.core.StoredBlock;
-import org.bitcoinj.core.Utils;
 import org.bitcoinj.core.VerificationException;
-import org.bitcoinj.net.discovery.HttpDiscovery;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.BlockStoreException;
 
-import static com.google.common.base.Preconditions.checkState;
+import java.math.BigInteger;
+import java.time.Instant;
+
+import static org.bitcoinj.base.internal.Preconditions.checkState;
 
 /**
  * Parameters for the testnet, a separate public instance of Bitcoin that has relaxed rules suitable for development
  * and testing of applications and new Bitcoin versions.
  */
-public class TestNet3Params extends AbstractBitcoinNetParams {
+public class TestNet3Params extends BitcoinNetworkParams {
     public static final int TESTNET_MAJORITY_WINDOW = 100;
     public static final int TESTNET_MAJORITY_REJECT_BLOCK_OUTDATED = 75;
     public static final int TESTNET_MAJORITY_ENFORCE_BLOCK_UPGRADE = 51;
@@ -50,11 +45,10 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
     private static final Sha256Hash GENESIS_HASH = Sha256Hash.wrap("000000ffbb50fc9898cdd36ec163e6ba23230164c0052a28876255b7dcf2cd36");
 
     public TestNet3Params() {
-        super();
-        id = ID_TESTNET;
+        super(BitcoinNetwork.TESTNET);
 
         targetTimespan = TARGET_TIMESPAN;
-        maxTarget = Utils.decodeCompactBits(Block.STANDARD_MAX_DIFFICULTY_TARGET_TESTNET);
+        maxTarget = ByteUtils.decodeCompactBits(Block.STANDARD_MAX_DIFFICULTY_TARGET_TESTNET);
 
         port = 17777;
         packetMagic = 0x0b110907;
@@ -76,8 +70,6 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
             "testnet-seed1.groestlcoin.org",
             "testnet-seed2.groestlcoin.org",
         };
-        httpSeeds = new HttpDiscovery.Details[] {
-        };
         addrSeeds = null;
 
     }
@@ -94,21 +86,20 @@ public class TestNet3Params extends AbstractBitcoinNetParams {
     public Block getGenesisBlock() {
         synchronized (GENESIS_HASH) {
             if (genesisBlock == null) {
-                genesisBlock = Block.createGenesis(this);
+                genesisBlock = Block.createGenesis();
                 genesisBlock.setDifficultyTarget(Block.STANDARD_MAX_DIFFICULTY_TARGET_TESTNET);
                 genesisBlock.setVersion(3);
-                genesisBlock.setTime(GENESIS_TIME);
+                genesisBlock.setTime(Instant.ofEpochSecond(GENESIS_TIME));
                 genesisBlock.setNonce(GENESIS_NONCE);
-                checkState(genesisBlock.getHash().equals(GENESIS_HASH), "Invalid genesis hash");
+                checkState(genesisBlock.getHash().equals(GENESIS_HASH), () ->
+                        "invalid genesis hash");
             }
         }
         return genesisBlock;
     }
 
-    @Override
-    public String getPaymentProtocolId() {
-        return PAYMENT_PROTOCOL_ID_TESTNET;
-    }
+    // February 16th 2012
+    private static final Instant testnetDiffDate = Instant.ofEpochMilli(1329264000000L);
 
     @Override
     public void checkDifficultyTransitions(final StoredBlock storedPrev, final Block nextBlock,
