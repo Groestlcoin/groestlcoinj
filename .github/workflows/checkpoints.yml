@@ -42,6 +42,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: checkpoints-${{ env.NOW }}
