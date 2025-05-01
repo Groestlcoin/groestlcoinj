@@ -71,7 +71,7 @@ public class MainNetParams extends AbstractBitcoinNetParams {
         httpSeeds = new HttpDiscovery.Details[] {
                 new HttpDiscovery.Details(
                         ECKey.fromPublicOnly(Utils.HEX.decode("0248876142c407e9a05a07f96caf212eb5b54b68845ddee44739094b02e24d13e4")),
-                        URI.create("http://groestlcoin.org:8080/peers")
+                        URI.create("https://104.236.178.245:8080/peers")
                 )
         };
 
