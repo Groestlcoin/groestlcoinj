@@ -33,7 +33,7 @@ jobs:
       - name: Build testnet checkpoints
         run: ./tools/build-checkpoints --net=TEST
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: checkpoints-${{ env.NOW }}
           path: |

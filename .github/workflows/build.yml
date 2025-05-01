@@ -35,7 +35,7 @@ jobs:
           gradle-version: ${{ matrix.gradle }}
           arguments: assemble --stacktrace
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: groestlcoinj-core-${{ matrix.java }}-${{ matrix.os }}
