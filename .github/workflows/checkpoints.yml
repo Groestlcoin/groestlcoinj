@@ -41,6 +41,7 @@ jobs:
             tools/checkpoints-testnet.txt
           if-no-files-found: error
           retention-days: 7
+          overwrite: true
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
