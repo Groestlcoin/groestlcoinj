@@ -49,8 +49,8 @@ protobuf {
     generatedFilesBaseDir = new File(projectDir, '/src') // workaround for '$projectDir/src'
 }
 
-tasks.getByName("processResources") {
-    dependsOn "generateProto"
+tasks.named("processResources") {
+    dependsOn("generateProto")
 }
 
 test {
@@ -182,7 +182,7 @@ javadoc {
     }
 }
 
-tasks.getByName('processTestResources') {
-    dependsOn 'generateTestProto'
+tasks.named('processTestResources') {
+    dependsOn tasks.named('generateTestProto')
 }
 
